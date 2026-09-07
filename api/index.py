@@ -25,8 +25,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Register API routes first, so /api/... is handled before static files.
 app.include_router(router)
 
+# Resolves to <project-root>/public
 public_directory = Path(__file__).resolve().parent.parent / "public"
-app.include_router(router)
-app.mount("/", StaticFiles(directory=public_directory, html=True), name="public")
+
+app.mount(
+    "/",
+    StaticFiles(directory=str(public_directory), html=True),
+    name="public",
+)
