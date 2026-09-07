@@ -23,6 +23,8 @@
 # misc
 .DS_Store
 *.pem
+project_details.html
+llm_init_instrc.md
 
 # debug
 npm-debug.log*
