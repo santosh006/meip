@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A simple task manager built with FastAPI and PostgreSQL."
+    />
+    <title>Task Manager</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+
+  <body>
+    <main class="app-container">
+      <header class="app-header">
+        <h1>Task Manager</h1>
+        <p>Keep track of what needs to get done.</p>
+      </header>
+
+      <section class="task-form-section" aria-labelledby="new-task-heading">
+        <h2 id="new-task-heading">Add a task</h2>
+
+        <form id="task-form">
+          <div class="form-group">
+            <label for="title">Task title</label>
+            <input
+              id="title"
+              name="title"
+              type="text"
+              placeholder="For example: Prepare project presentation"
+              maxlength="255"
+              required
+              autofocus
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="description">Description <span>(optional)</span></label>
+            <textarea
+              id="description"
+              name="description"
+              placeholder="Add any helpful details about this task..."
+              maxlength="2000"
+            ></textarea>
+          </div>
+
+          <button class="submit-button" type="submit">Add task</button>
+
+          <p
+            id="form-message"
+            class="form-message"
+            role="status"
+            aria-live="polite"
+          ></p>
+        </form>
+      </section>
+
+      <section class="task-list-section" aria-labelledby="tasks-heading">
+        <h2 id="tasks-heading">Your tasks</h2>
+
+        <p id="empty-state" class="empty-state" hidden>
+          No tasks yet. Add your first task above.
+        </p>
+
+        <div
+          id="task-list"
+          class="task-list"
+          aria-live="polite"
+          aria-label="Task list"
+        ></div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
