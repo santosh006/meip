@@ -1,0 +1,44 @@
+name: Run Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    # Define the PostgreSQL service container
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: meip_user
+          POSTGRES_PASSWORD: meip_password_2026
+          POSTGRES_DB: meip
+        ports:
+          - 5432:5432
+        # Health check to ensure DB is ready before tests start
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    # Set the environment variable used by your FastAPI app
+    env:
+      DATABASE_URL: postgresql+psycopg://meip_user:meip_password_2026@localhost:5432/meip
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Tests
+        run: pytest
