@@ -1,6 +1,9 @@
 'use client';
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
 
 type Item = {
   id: string;
@@ -19,30 +22,47 @@ export default function DevPortalClient({ initialItems }: { initialItems: Item[]
   const [editingId, setEditingId] = useState<string | null>(null);
 
   async function addItem() {
-    const { data } = await supabase
-      .from('workspace_items')
-      .insert({ kind, title: 'Untitled', content: '' })
-      .select()
-      .single();
-    if (data) {
-      setItems([data, ...items]);
-      setEditingId(data.id);
+    const { data, error } = await supabase
+        .from('workspace_items')
+        .insert({ kind, title: 'Untitled', content: '' })
+        .select()
+        .single();
+
+    if (error) {
+        console.error('addItem failed:', error);
+        alert('Could not create item: ' + error.message);
+        return;
     }
-  }
+    if (data) {
+        setItems([data, ...items]);
+        setEditingId(data.id);
+    }
+    }
 
   async function saveItem(id: string, title: string, content: string) {
-    await supabase
-      .from('workspace_items')
-      .update({ title, content, updated_at: new Date().toISOString() })
-      .eq('id', id);
+    const { error } = await supabase
+        .from('workspace_items')
+        .update({ title, content, updated_at: new Date().toISOString() })
+        .eq('id', id);
+
+    if (error) {
+        console.error('saveItem failed:', error);
+        alert('Could not save: ' + error.message);
+        return;
+    }
     setItems(items.map((i) => (i.id === id ? { ...i, title, content } : i)));
     setEditingId(null);
-  }
+    }
 
   async function deleteItem(id: string) {
-    await supabase.from('workspace_items').delete().eq('id', id);
+    const { error } = await supabase.from('workspace_items').delete().eq('id', id);
+    if (error) {
+        console.error('deleteItem failed:', error);
+        alert('Could not delete: ' + error.message);
+        return;
+    }
     setItems(items.filter((i) => i.id !== id));
-  }
+    }
 
   const badge = (k: string) => {
     const colors: Record<string, string> = {
@@ -132,13 +152,25 @@ function EditCard({
         placeholder="Title"
         className="w-full mb-3 px-3 py-2 rounded bg-[#0d1117] border border-[#2b333d] outline-none focus:border-[#4ea1ff]"
       />
-      <textarea
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        placeholder="Write anything… (markdown-friendly)"
-        rows={5}
-        className="w-full mb-3 px-3 py-2 rounded bg-[#0d1117] border border-[#2b333d] outline-none focus:border-[#4ea1ff]"
-      />
+
+      {/* Split pane: editor left, live preview right */}
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="Write Markdown here…"
+          rows={10}
+          className="w-full px-3 py-2 rounded bg-[#0d1117] border border-[#2b333d] font-mono text-sm outline-none focus:border-[#4ea1ff] resize-none"
+        />
+        <div className="px-3 py-2 rounded bg-[#0d1117] border border-[#2b333d] overflow-auto" style={{ maxHeight: '15rem' }}>
+          <article className="prose prose-invert prose-sm max-w-none">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {content || '*Nothing to preview yet.*'}
+            </ReactMarkdown>
+          </article>
+        </div>
+      </div>
+
       <div className="flex gap-2">
         <button
           onClick={() => onSave(item.id, title, content)}
@@ -153,3 +185,4 @@ function EditCard({
     </div>
   );
 }
+
