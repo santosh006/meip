@@ -26,6 +26,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     </Link>
   );
 
+
   return (
     <div className="min-h-screen grid grid-cols-[240px_1fr] bg-[#0d1117] text-[#e6edf3]">
       <aside className="bg-[#161b22] border-r border-[#2b333d] p-4 flex flex-col">
