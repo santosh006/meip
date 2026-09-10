@@ -19,7 +19,7 @@ export default async function AppPreview() {
     <Shell>
       <h1 className="text-2xl font-bold mb-1">Impact Records</h1>
       <p className="text-[#9aa7b4] mb-6">
-        Live preview of the customer-facing product — real data from Supabase.
+        Live preview of the customer-facing product — real data
       </p>
       <div className="grid gap-3">
         {(records ?? []).map((r: any) => (
