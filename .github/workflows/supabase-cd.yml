@@ -1,4 +1,4 @@
-name: Deploy Supabase Database Migrations
+name: Deploy Supabase Database Migration
 
 on:
   push:
