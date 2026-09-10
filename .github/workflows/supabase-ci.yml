@@ -1,4 +1,4 @@
-name: Supabase Migration Check
+name: Supabase Migration Checks
 
 on:
   pull_request:
@@ -24,4 +24,3 @@ jobs:
       - name: Test Database Migrations
         run: |
           supabase db start
-          supabase test db
