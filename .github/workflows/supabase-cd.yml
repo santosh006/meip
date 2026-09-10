@@ -32,8 +32,8 @@ jobs:
       - name: Set Environment Variables
         run: |
           if [ "${{ github.ref_name }}" = "dev_branch" ] || [ "${{ github.ref_name }}" = "uat_branch" ]; then
-            echo "PROJECT_ID=${{ secrets.SUPABASE_NONPROD_PROJECT_ID }}" >> $GITHUB_ENV
-            echo "DB_PASSWORD=${{ secrets.SUPABASE_NONPROD_DB_PASSWORD }}" >> $GITHUB_ENV
+            echo "PROJECT_ID=${{ secrets.SUPABASE_NON_PROD_PROJECT_ID }}" >> $GITHUB_ENV
+            echo "DB_PASSWORD=${{ secrets.SUPABASE_NON_PROD_DB_PASSWORD }}" >> $GITHUB_ENV
             echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL_NONPROD }}" >> $GITHUB_ENV
             echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY_NONPROD }}" >> $GITHUB_ENV
             echo "ENV_NAME=Non-Production (${{ github.ref_name }})" >> $GITHUB_ENV
