@@ -9,9 +9,9 @@ type Item = {
   id: string;
   kind: string;
   title: string;
-  content: string;
-  pinned: boolean;
-  updated_at: string;
+  content: string | null;
+  pinned: boolean | null;
+  updated_at: string | null;
 };
 
 const KINDS = ['note', 'doc', 'strategy', 'decision', 'idea'];
@@ -156,7 +156,7 @@ function EditCard({
       {/* Split pane: editor left, live preview right */}
       <div className="grid grid-cols-2 gap-3 mb-3">
         <textarea
-          value={content}
+          value={content ?? ''}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Write Markdown here…"
           rows={10}
@@ -173,7 +173,7 @@ function EditCard({
 
       <div className="flex gap-2">
         <button
-          onClick={() => onSave(item.id, title, content)}
+          onClick={() => onSave(item.id, title, content ?? '')}
           className="px-4 py-2 rounded bg-[#4ea1ff] text-black font-semibold text-sm"
         >
           Save
