@@ -1,0 +1,42 @@
+name: Deploy Supabase Database Migrations
+
+on:
+  push:
+    branches:
+      - dev_branch
+      - uat_branch
+      - main
+    paths:
+      - 'supabase/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # Assign same Non-Prod secrets for both dev_branch and uat_branch
+      - name: Set Environment Variables
+        run: |
+          if [ "${{ github.ref_name }}" = "dev_branch" ] || [ "${{ github.ref_name }}" = "uat_branch" ]; then
+            echo "PROJECT_ID=${{ secrets.SUPABASE_NONPROD_PROJECT_ID }}" >> $GITHUB_ENV
+            echo "DB_PASSWORD=${{ secrets.SUPABASE_NONPROD_DB_PASSWORD }}" >> $GITHUB_ENV
+            echo "ENV_NAME=Non-Production (${{ github.ref_name }})" >> $GITHUB_ENV
+          elif [ "${{ github.ref_name }}" = "main" ]; then
+            echo "PROJECT_ID=${{ secrets.SUPABASE_PROD_PROJECT_ID }}" >> $GITHUB_ENV
+            echo "DB_PASSWORD=${{ secrets.SUPABASE_PROD_DB_PASSWORD }}" >> $GITHUB_ENV
+            echo "ENV_NAME=Production" >> $GITHUB_ENV
+          fi
+
+      - name: Push Migrations to ${{ env.ENV_NAME }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase link --project-ref ${{ env.PROJECT_ID }} -p ${{ env.DB_PASSWORD }}
+          supabase db push
