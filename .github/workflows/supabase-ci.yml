@@ -1,0 +1,27 @@
+name: Supabase Migration Check
+
+on:
+  pull_request:
+    branches:
+      - dev_branch
+      - uat_branch
+      - main
+    paths:
+      - 'supabase/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Test Database Migrations
+        run: |
+          supabase db start
+          supabase test db
