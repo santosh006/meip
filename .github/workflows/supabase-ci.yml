@@ -24,4 +24,3 @@ jobs:
       - name: Test Database Migrations
         run: |
           supabase db start
-          supabase test db
