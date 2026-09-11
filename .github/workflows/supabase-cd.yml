@@ -37,12 +37,14 @@ jobs:
             echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL_NONPROD }}" >> $GITHUB_ENV
             echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY_NONPROD }}" >> $GITHUB_ENV
             echo "ENV_NAME=Non-Production (${{ github.ref_name }})" >> $GITHUB_ENV
+            echo "VERCEL_ENV=preview" >> $GITHUB_ENV
           elif [ "${{ github.ref_name }}" = "main" ]; then
             echo "PROJECT_ID=${{ secrets.SUPABASE_PROD_PROJECT_ID }}" >> $GITHUB_ENV
             echo "DB_PASSWORD=${{ secrets.SUPABASE_PROD_DB_PASSWORD }}" >> $GITHUB_ENV
             echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL_PROD }}" >> $GITHUB_ENV
             echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY_PROD }}" >> $GITHUB_ENV
             echo "ENV_NAME=Production" >> $GITHUB_ENV
+            echo "VERCEL_ENV=production" >> $GITHUB_ENV
           fi
 
       - name: Push Migrations to ${{ env.ENV_NAME }}
@@ -52,15 +54,31 @@ jobs:
           if [ -z "${{ env.PROJECT_ID }}" ] || [ -z "${{ env.DB_PASSWORD }}" ]; then
             echo "ERROR: PROJECT_ID or DB_PASSWORD not set."
             exit 1
-          fi 
+          fi
           supabase link --project-ref ${{ env.PROJECT_ID }} -p ${{ env.DB_PASSWORD }}
           supabase db push
 
       - name: Install Dependencies
         run: npm ci
 
-      - name: Build Next.js Application
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Build & Deploy to Vercel
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ env.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-        run: npm run build
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          PROD_FLAG=""
+          if [ "${{ env.VERCEL_ENV }}" = "production" ]; then
+            PROD_FLAG="--prod"
+          fi
+
+          vercel deploy $PROD_FLAG \
+            --token=${{ secrets.VERCEL_TOKEN }} \
+            --yes \
+            --build-env NEXT_PUBLIC_SUPABASE_URL=${{ env.NEXT_PUBLIC_SUPABASE_URL }} \
+            --build-env NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY }} \
+            --env NEXT_PUBLIC_SUPABASE_URL=${{ env.NEXT_PUBLIC_SUPABASE_URL }} \
+            --env NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
