@@ -1,16 +1,25 @@
 import { createSupabaseServer } from '@/lib/supabase-server';
-import { scoreEvent, RawEvent } from './index';
+import { scoreEvent } from './index';
+import type { RawEvent } from './index';
 
-export async function ingestAndScore(input: RawEvent & {
+export type IngestEvent = RawEvent & {
+  company?: string;
+  security?: string;
   entityId?: string;
   sourceId?: string;
   sourceUrl?: string;
   occurredAt: string;
-}) {
+  eventStatus?: string;
+  horizon?: string;
+  materiality?: string;
+  evidenceUrl?: string;
+};
+
+export async function ingestAndScore(input: IngestEvent) {
   const supabase = await createSupabaseServer();
   const scored = scoreEvent(input);
 
-  // 1. write the event with its analysis
+  // Store the normalized event and its scoring result.
   const { data: event, error: evErr } = await supabase
     .from('events')
     .insert({
@@ -32,22 +41,25 @@ export async function ingestAndScore(input: RawEvent & {
 
   if (evErr) throw evErr;
 
-  // 2. mirror into impact_records (the Analysis view reads this)
-  const { error: irErr } = await supabase
-  .from('impact_records')
-  .insert({
-    event_id: event.id,
-    entity_id: input.entityId ?? null,
-    headline: input.title,
-    impact_score: scored.impactScore,
-    direction: scored.direction,
-    significance: scored.significance,
-    confidence: scored.confidence,
-    rationale: scored.rationale,
-    metrics: scored.affectedMetrics,
-    occurred_at: input.occurredAt,
-  });
+  // Mirror the result into the schema used by the customer-facing view.
+  const { data: impactRecord, error: irErr } = await supabase
+    .from('impact_records')
+    .insert({
+      company: input.company ?? input.title,
+      security: input.security ?? null,
+      sector: input.sector ?? null,
+      event_type: input.eventType,
+      direction: scored.direction,
+      confidence: scored.confidence,
+      event_status: input.eventStatus ?? 'analyzed',
+      horizon: input.horizon ?? null,
+      materiality: input.materiality ?? scored.significance,
+      summary: scored.rationale,
+      evidence_url: input.evidenceUrl ?? input.sourceUrl ?? null,
+    })
+    .select()
+    .single();
 
   if (irErr) throw irErr;
-  return { event, scored };
+  return { event, impactRecord, scored };
 }
