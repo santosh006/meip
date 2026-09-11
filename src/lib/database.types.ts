@@ -41,6 +41,21 @@ export type Database = {
         }
         Relationships: []
       }
+      cicd_test: {
+        Row: {
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       entities: {
         Row: {
           aliases: string[] | null
@@ -181,63 +196,51 @@ export type Database = {
       }
       impact_records: {
         Row: {
-          confidence: number
+          company: string
+          confidence: number | null
           created_at: string | null
-          direction: string
-          entity_id: string | null
-          event_id: string | null
-          headline: string
+          direction: string | null
+          event_status: string | null
+          event_type: string | null
+          evidence_url: string | null
+          horizon: string | null
           id: string
-          impact_score: number
-          metrics: Json | null
-          occurred_at: string
-          rationale: string | null
-          significance: string
+          materiality: string | null
+          sector: string | null
+          security: string | null
+          summary: string | null
         }
         Insert: {
-          confidence: number
+          company: string
+          confidence?: number | null
           created_at?: string | null
-          direction: string
-          entity_id?: string | null
-          event_id?: string | null
-          headline: string
+          direction?: string | null
+          event_status?: string | null
+          event_type?: string | null
+          evidence_url?: string | null
+          horizon?: string | null
           id?: string
-          impact_score: number
-          metrics?: Json | null
-          occurred_at: string
-          rationale?: string | null
-          significance: string
+          materiality?: string | null
+          sector?: string | null
+          security?: string | null
+          summary?: string | null
         }
         Update: {
-          confidence?: number
+          company?: string
+          confidence?: number | null
           created_at?: string | null
-          direction?: string
-          entity_id?: string | null
-          event_id?: string | null
-          headline?: string
+          direction?: string | null
+          event_status?: string | null
+          event_type?: string | null
+          evidence_url?: string | null
+          horizon?: string | null
           id?: string
-          impact_score?: number
-          metrics?: Json | null
-          occurred_at?: string
-          rationale?: string | null
-          significance?: string
+          materiality?: string | null
+          sector?: string | null
+          security?: string | null
+          summary?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "impact_records_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "entities"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "impact_records_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       sources: {
         Row: {
