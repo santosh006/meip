@@ -20,7 +20,7 @@ export default async function ImpactPage() {
   const { data, error } = await supabase
     .from('impact_records')
     .select('*')
-    .order('occurred_on', { ascending: false, nullsFirst: false });
+    .order('created_at', { ascending: false, nullsFirst: false });
 
   if (error) {
     return (
@@ -32,12 +32,14 @@ export default async function ImpactPage() {
 
   const records: ImpactRecord[] = (data ?? []).map((row) => ({
     id: row.id,
-    title: row.headline,
-    category: row.direction,
-    description: row.rationale ?? '',
-    metric_label: 'Impact score',
-    metric_value: String(row.impact_score),
-    occurred_on: row.occurred_at,
+    title: row.company,
+    category: row.direction ?? 'neutral',
+    description: row.summary ?? '',
+    metric_label: row.materiality ? 'Materiality' : 'Confidence',
+    metric_value: row.materiality ?? (
+      row.confidence === null ? null : `${Math.round(row.confidence * 100)}%`
+    ),
+    occurred_on: row.created_at,
     created_at: row.created_at ?? '',
   }));
 

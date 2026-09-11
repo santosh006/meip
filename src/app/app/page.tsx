@@ -1,5 +1,6 @@
 import { createSupabaseServer } from '@/lib/supabase-server';
 import Shell from '@/components/Shell';
+import { ImpactRecord } from './impact/page';
 
 // export const dynamic = 'force-dynamic';
 
@@ -26,7 +27,7 @@ export default async function AppPreview() {
           <div key={r.id} className="bg-[#161b22] border border-[#2b333d] rounded-xl p-5">
             <div className="flex justify-between">
               <div className="font-semibold">{r.company}</div>
-              <span className={`text-sm font-medium ${dirColor(r.direction)}`}>
+              <span className={`text-sm font-medium ${dirColor(r.direction ?? '')}`}>
                 {r.direction}
               </span>
             </div>
