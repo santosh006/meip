@@ -1,28 +1,72 @@
+name: Supabase CD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set Environment Variables
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL_PROD }}" >> $GITHUB_ENV
+            echo "SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY_PROD }}" >> $GITHUB_ENV
+            echo "SUPABASE_DB_URL=${{ secrets.SUPABASE_DB_URL_PROD }}" >> $GITHUB_ENV
+            echo "VERCEL_ENV_TARGET=production" >> $GITHUB_ENV
+          else
+            echo "SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL_NONPROD }}" >> $GITHUB_ENV
+            echo "SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY_NONPROD }}" >> $GITHUB_ENV
+            echo "SUPABASE_DB_URL=${{ secrets.SUPABASE_DB_URL_NONPROD }}" >> $GITHUB_ENV
+            echo "VERCEL_ENV_TARGET=preview" >> $GITHUB_ENV
+          fi
+
+      - name: Verify Secrets Are Present
+        run: |
+          if [ -z "${{ env.SUPABASE_URL }}" ]; then
+            echo "ERROR: SUPABASE_URL is empty. Check GitHub Secret names." && exit 1
+          fi
+          if [ -z "${{ env.SUPABASE_ANON_KEY }}" ]; then
+            echo "ERROR: SUPABASE_ANON_KEY is empty. Check GitHub Secret names." && exit 1
+          fi
+          echo "Secrets verified. Target env: ${{ env.VERCEL_ENV_TARGET }}"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Install Vercel CLI
         run: npm install -g vercel
 
-      - name: Pull Vercel Project Info
+      - name: Register Env Vars in Vercel Project
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Set Supabase Env Vars in Vercel Project
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          TARGET_ENV="preview"
-          if [ "${{ github.ref_name }}" = "main" ]; then
-            TARGET_ENV="production"
-          fi
+          TARGET="${{ env.VERCEL_ENV_TARGET }}"
 
-          # Remove old values if they exist, then re-add with correct values for the branch
-          vercel env rm NEXT_PUBLIC_SUPABASE_URL $TARGET_ENV --yes --token=${{ secrets.VERCEL_TOKEN }} || true
-          vercel env rm NEXT_PUBLIC_SUPABASE_ANON_KEY $TARGET_ENV --yes --token=${{ secrets.VERCEL_TOKEN }} || true
+          # Remove stale values first (ignore errors if they don't exist)
+          vercel env rm NEXT_PUBLIC_SUPABASE_URL $TARGET --yes --token=$VERCEL_TOKEN 2>/dev/null || true
+          vercel env rm NEXT_PUBLIC_SUPABASE_ANON_KEY $TARGET --yes --token=$VERCEL_TOKEN 2>/dev/null || true
 
-          echo "${{ env.NEXT_PUBLIC_SUPABASE_URL }}" | vercel env add NEXT_PUBLIC_SUPABASE_URL $TARGET_ENV --token=${{ secrets.VERCEL_TOKEN }}
-          echo "${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" | vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY $TARGET_ENV --token=${{ secrets.VERCEL_TOKEN }}
+          # Register fresh values
+          echo "${{ env.SUPABASE_URL }}" | vercel env add NEXT_PUBLIC_SUPABASE_URL $TARGET --token=$VERCEL_TOKEN
+          echo "${{ env.SUPABASE_ANON_KEY }}" | vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY $TARGET --token=$VERCEL_TOKEN
+
+      - name: Run Supabase Migrations
+        env:
+          SUPABASE_DB_URL: ${{ env.SUPABASE_DB_URL }}
+        run: |
+          npx supabase db push --db-url=$SUPABASE_DB_URL
 
       - name: Deploy to Vercel
         env:
@@ -31,7 +75,7 @@
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
-            vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+            vercel deploy --prod --yes --token=$VERCEL_TOKEN
           else
-            vercel deploy --yes --token=${{ secrets.VERCEL_TOKEN }}
+            vercel deploy --yes --token=$VERCEL_TOKEN
           fi
