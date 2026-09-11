@@ -17,65 +17,82 @@ jobs:
       - name: Set Environment Variables
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
-            echo "SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL_PROD }}" >> $GITHUB_ENV
-            echo "SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY_PROD }}" >> $GITHUB_ENV
-            echo "SUPABASE_DB_URL=${{ secrets.SUPABASE_DB_URL_PROD }}" >> $GITHUB_ENV
+            echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL_PROD }}" >> $GITHUB_ENV
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY_PROD }}" >> $GITHUB_ENV
             echo "VERCEL_ENV_TARGET=production" >> $GITHUB_ENV
           else
-            echo "SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL_NONPROD }}" >> $GITHUB_ENV
-            echo "SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY_NONPROD }}" >> $GITHUB_ENV
-            echo "SUPABASE_DB_URL=${{ secrets.SUPABASE_DB_URL_NONPROD }}" >> $GITHUB_ENV
+            echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL_NONPROD }}" >> $GITHUB_ENV
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY_NONPROD }}" >> $GITHUB_ENV
             echo "VERCEL_ENV_TARGET=preview" >> $GITHUB_ENV
           fi
-
-      - name: Verify Secrets Are Present
-        run: |
-          if [ -z "${{ env.SUPABASE_URL }}" ]; then
-            echo "ERROR: SUPABASE_URL is empty. Check GitHub Secret names." && exit 1
-          fi
-          if [ -z "${{ env.SUPABASE_ANON_KEY }}" ]; then
-            echo "ERROR: SUPABASE_ANON_KEY is empty. Check GitHub Secret names." && exit 1
-          fi
-          echo "Secrets verified. Target env: ${{ env.VERCEL_ENV_TARGET }}"
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
 
       - name: Install Vercel CLI
         run: npm install -g vercel
 
-      - name: Register Env Vars in Vercel Project
+      - name: Pull Vercel Project Settings
+        run: vercel pull --yes --environment=${{ env.VERCEL_ENV_TARGET }} --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Build with Vercel (injects NEXT_PUBLIC_* at build time)
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ env.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: |
-          TARGET="${{ env.VERCEL_ENV_TARGET }}"
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            vercel build --token=${{ secrets.VERCEL_TOKEN }}
+          fi
 
-          # Remove stale values first (ignore errors if they don't exist)
-          vercel env rm NEXT_PUBLIC_SUPABASE_URL $TARGET --yes --token=$VERCEL_TOKEN 2>/dev/null || true
-          vercel env rm NEXT_PUBLIC_SUPABASE_ANON_KEY $TARGET --yes --token=$VERCEL_TOKEN 2>/dev/null || true
-
-          # Register fresh values
-          echo "${{ env.SUPABASE_URL }}" | vercel env add NEXT_PUBLIC_SUPABASE_URL $TARGET --token=$VERCEL_TOKEN
-          echo "${{ env.SUPABASE_ANON_KEY }}" | vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY $TARGET --token=$VERCEL_TOKEN
-
-      - name: Run Supabase Migrations
-        env:
-          SUPABASE_DB_URL: ${{ env.SUPABASE_DB_URL }}
-        run: |
-          npx supabase db push --db-url=$SUPABASE_DB_URL
-
-      - name: Deploy to Vercel
+      - name: Deploy Prebuilt to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
-            vercel deploy --prod --yes --token=$VERCEL_TOKEN
+            vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
           else
-            vercel deploy --yes --token=$VERCEL_TOKEN
+            vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
           fi
+
+      - name: Set Supabase Env Vars from GitHub Secrets
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL_PROD }}" >> $GITHUB_ENV
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY_PROD }}" >> $GITHUB_ENV
+          else
+            echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL_NONPROD }}" >> $GITHUB_ENV
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY_NONPROD }}" >> $GITHUB_ENV
+          fi
+
+      - name: Build
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            vercel build --token=${{ secrets.VERCEL_TOKEN }}
+          fi
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ env.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+      - name: Deploy Prebuilt
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+          fi
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      
