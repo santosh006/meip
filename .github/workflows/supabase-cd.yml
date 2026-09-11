@@ -1,63 +1,80 @@
-name: Deploy Supabase Database Migration & Build Application
+name: Supabase CD
 
 on:
   push:
     branches:
-      - dev_branch
-      - uat_branch
       - main
-    paths:
-      - 'supabase/**'
-      - 'src/**'
-      - 'package*.json'
+      - dev
+      - uat
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: 'npm'
+          node-version: 20
 
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
+      - name: Install Vercel CLI
+        run: npm install -g vercel
 
-      - name: Set Environment Variables
+      - name: Install Supabase CLI
         run: |
-          if [ "${{ github.ref_name }}" = "dev_branch" ] || [ "${{ github.ref_name }}" = "uat_branch" ]; then
-            echo "PROJECT_ID=${{ secrets.SUPABASE_NON_PROD_PROJECT_ID }}" >> $GITHUB_ENV
-            echo "DB_PASSWORD=${{ secrets.SUPABASE_NON_PROD_DB_PASSWORD }}" >> $GITHUB_ENV
-            echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL_NONPROD }}" >> $GITHUB_ENV
-            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY_NONPROD }}" >> $GITHUB_ENV
-            echo "ENV_NAME=Non-Production (${{ github.ref_name }})" >> $GITHUB_ENV
-          elif [ "${{ github.ref_name }}" = "main" ]; then
-            echo "PROJECT_ID=${{ secrets.SUPABASE_PROD_PROJECT_ID }}" >> $GITHUB_ENV
-            echo "DB_PASSWORD=${{ secrets.SUPABASE_PROD_DB_PASSWORD }}" >> $GITHUB_ENV
-            echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL_PROD }}" >> $GITHUB_ENV
-            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY_PROD }}" >> $GITHUB_ENV
-            echo "ENV_NAME=Production" >> $GITHUB_ENV
+          curl -sSfL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | tar xz
+          sudo mv supabase /usr/local/bin/supabase
+
+      - name: Set environment target
+        id: env_target
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "VERCEL_ENV=production" >> $GITHUB_OUTPUT
+            echo "IS_PROD=true" >> $GITHUB_OUTPUT
+          else
+            echo "VERCEL_ENV=preview" >> $GITHUB_OUTPUT
+            echo "IS_PROD=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Push Migrations to ${{ env.ENV_NAME }}
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      - name: Pull Vercel Environment
         run: |
-          if [ -z "${{ env.PROJECT_ID }}" ] || [ -z "${{ env.DB_PASSWORD }}" ]; then
-            echo "ERROR: PROJECT_ID or DB_PASSWORD not set."
+          vercel pull --yes \
+            --environment=${{ steps.env_target.outputs.VERCEL_ENV }} \
+            --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Load env vars from Vercel
+        run: |
+          ENV_FILE=".vercel/.env.${{ steps.env_target.outputs.VERCEL_ENV }}.local"
+          if [ -f "$ENV_FILE" ]; then
+            export $(grep -v '^#' "$ENV_FILE" | xargs)
+            echo "SUPABASE_DB_URL=$SUPABASE_DB_URL" >> $GITHUB_ENV
+          else
+            echo "Env file not found: $ENV_FILE"
             exit 1
-          fi 
-          supabase link --project-ref ${{ env.PROJECT_ID }} -p ${{ env.DB_PASSWORD }}
-          supabase db push
+          fi
 
-      - name: Install Dependencies
-        run: npm ci
+      - name: Run Supabase Migrations
+        run: |
+          supabase db push --db-url "${{ env.SUPABASE_DB_URL }}"
 
-      - name: Build Next.js Application
-        run: npm run build
+      - name: Build
+        run: |
+          if [ "${{ steps.env_target.outputs.IS_PROD }}" = "true" ]; then
+            vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            vercel build --token=${{ secrets.VERCEL_TOKEN }}
+          fi
+
+      - name: Deploy Prebuilt
+        run: |
+          if [ "${{ steps.env_target.outputs.IS_PROD }}" = "true" ]; then
+            vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+          fi
