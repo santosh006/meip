@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import ThemeToggle from '@/components/ThemeToggle';
 
 // export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0d1117] text-[#e6edf3]">
+      <ThemeToggle />
       <form onSubmit={handleLogin} className="bg-[#161b22] border border-[#2b333d] rounded-xl p-8 w-80">
         <h1 className="text-xl font-bold mb-1">Market Intelligence</h1>
         <p className="text-sm text-[#9aa7b4] mb-6">Internal dev portal — sign in</p>

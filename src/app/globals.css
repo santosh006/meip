@@ -2,8 +2,8 @@
 @plugin "@tailwindcss/typography";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #1d1d1f;
+  --foreground: #f5f5f7;
 }
 
 @theme inline {
@@ -13,15 +13,124 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+:root[data-theme='dark'] {
+  --background: #1d1d1f;
+  --foreground: #f5f5f7;
+  color-scheme: dark;
+}
+
+:root[data-theme='dark'] body {
+  background: #1d1d1f;
+  color: #f5f5f7;
+}
+
+:root[data-theme='light'] {
+  --background: #eeeeF2;
+  --foreground: #1d1d1f;
+  color-scheme: light;
+}
+
+:root[data-theme='light'] body {
+  background: #eeeeF2;
+  color: #1d1d1f;
+}
+
+/* Translate the existing utility palette without requiring a page-by-page rewrite. */
+:root[data-theme='dark'] [class*='bg-[#0d1117]'] {
+  background-color: #1d1d1f !important;
+}
+
+:root[data-theme='dark'] [class*='bg-[#161b22]'] {
+  background-color: #2c2c2e !important;
+}
+
+:root[data-theme='dark'] [class*='bg-[#21262d]'] {
+  background-color: #3a3a3c !important;
+}
+
+:root[data-theme='dark'] [class*='text-[#e6edf3]'],
+:root[data-theme='dark'] [class*='text-white'] {
+  color: #f5f5f7 !important;
+}
+
+:root[data-theme='dark'] [class*='text-[#c9d1d9]'] {
+  color: #d1d1d6 !important;
+}
+
+:root[data-theme='dark'] [class*='text-[#9aa7b4]'] {
+  color: #a1a1a6 !important;
+}
+
+:root[data-theme='dark'] [class*='border-[#2b333d]'] {
+  border-color: #48484a !important;
+}
+
+:root[data-theme='dark'] [class*='border-[#e3b341'] {
+  border-color: #48484a !important;
+}
+
+:root[data-theme='dark'] [class*='bg-[#4ea1ff]'] {
+  background-color: #0071e3 !important;
+}
+
+:root[data-theme='dark'] [class*='text-[#4ea1ff]'] {
+  color: #2997ff !important;
+}
+
+:root[data-theme='dark'] [class*='border-[#4ea1ff]'] {
+  border-color: #2997ff !important;
+}
+
+:root[data-theme='light'] [class*='bg-[#0d1117]'] {
+  background-color: #f8f8fa !important;
+}
+
+:root[data-theme='light'] [class*='bg-[#161b22]'] {
+  background-color: #f8f8fa !important;
+}
+
+:root[data-theme='light'] [class*='bg-[#21262d]'] {
+  background-color: #e1e1e6 !important;
+}
+
+:root[data-theme='light'] [class*='text-[#e6edf3]'],
+:root[data-theme='light'] [class*='text-white'] {
+  color: #1d1d1f !important;
+}
+
+:root[data-theme='light'] [class*='text-[#c9d1d9]'] {
+  color: #424245 !important;
+}
+
+:root[data-theme='light'] [class*='text-[#9aa7b4]'] {
+  color: #6e6e73 !important;
+}
+
+:root[data-theme='light'] [class*='border-[#2b333d]'] {
+  border-color: #d2d2d7 !important;
+}
+
+:root[data-theme='light'] [class*='bg-[#4ea1ff]'] {
+  background-color: #0071e3 !important;
+}
+
+:root[data-theme='light'] [class*='text-[#4ea1ff]'] {
+  color: #0071e3 !important;
+}
+
+:root[data-theme='light'] [class*='border-[#4ea1ff]'] {
+  border-color: #0071e3 !important;
+}
+
+:root[data-theme='light'] input,
+:root[data-theme='light'] textarea,
+:root[data-theme='light'] select {
+  color: #1d1d1f;
+  background-color: #f8f8fa;
 }
