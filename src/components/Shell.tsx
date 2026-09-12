@@ -35,16 +35,20 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className={`min-h-screen grid ${isCollapsed ? 'grid-cols-[72px_1fr]' : 'grid-cols-[240px_1fr]'} bg-[#0d1117] text-[#e6edf3]`}>
       <aside className="flex flex-col border-r border-[#2b333d] bg-[#161b22] p-4">
-        <div className={`mb-1 font-bold ${isCollapsed ? 'text-center text-lg' : ''}`} title={isCollapsed ? 'Market Intelligence Platform' : undefined}>
-          {isCollapsed ? 'M' : 'Market Intelligence Platform'}
+        <div
+          className={`mb-6 font-semibold tracking-tight text-[#e6edf3] ${isCollapsed ? 'text-center text-lg' : 'text-xl leading-tight'}`}
+          title={isCollapsed ? 'Market Intelligence Platform' : undefined}
+          aria-label="Market Intelligence Platform"
+        >
+          {isCollapsed ? 'MEIP' : 'Market Intelligence Platform'}
         </div>
-        {!isCollapsed && (
+        {/* {!isCollapsed && (
           <span className="mb-6 w-fit rounded-full border border-[#e3b34166] px-2 py-0.5 text-[10px] text-[#e3b341]">
             INTERNAL DEV
           </span>
-        )}
+        )} */}
         <nav className="flex flex-col gap-1">
-          {link('/dev-portal', 'DevArena', '⌘')}
+          {link('/dev-portal', 'Foundry', '⌘')}
           {link('/app', 'StockFinder', '◈')}
         </nav>
         <div className="mt-auto mb-10 flex flex-col gap-1">
