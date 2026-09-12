@@ -36,7 +36,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         </span>
         <nav className="flex flex-col gap-1">
           {link('/dev-portal', 'DevArena')}
-          {link('/app', 'CustomerApp')}
+          {link('/app', 'StockFinder')}
         </nav>
         <button
           onClick={logout}
