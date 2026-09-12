@@ -21,7 +21,7 @@ body {
 
 :root[data-theme='dark'] {
   --background: #1d1d1f;
-  --foreground: #f5f5f7;
+  --foreground: #f1e1b0;
   color-scheme: dark;
 }
 
@@ -31,13 +31,13 @@ body {
 }
 
 :root[data-theme='light'] {
-  --background: #eeeeF2;
+  --background: #f3ead6;
   --foreground: #1d1d1f;
   color-scheme: light;
 }
 
 :root[data-theme='light'] body {
-  background: #eeeeF2;
+  background: #f3ead6;
   color: #1d1d1f;
 }
 
@@ -56,11 +56,11 @@ body {
 
 :root[data-theme='dark'] [class*='text-[#e6edf3]'],
 :root[data-theme='dark'] [class*='text-white'] {
-  color: #f5f5f7 !important;
+  color: #f3ead6 !important;
 }
 
 :root[data-theme='dark'] [class*='text-[#c9d1d9]'] {
-  color: #d1d1d6 !important;
+  color: #f3ead6 !important;
 }
 
 :root[data-theme='dark'] [class*='text-[#9aa7b4]'] {
@@ -76,7 +76,7 @@ body {
 }
 
 :root[data-theme='dark'] [class*='bg-[#4ea1ff]'] {
-  background-color: #0071e3 !important;
+  background-color: #2997ff !important;
 }
 
 :root[data-theme='dark'] [class*='text-[#4ea1ff]'] {
@@ -84,7 +84,7 @@ body {
 }
 
 :root[data-theme='dark'] [class*='border-[#4ea1ff]'] {
-  border-color: #2997ff !important;
+  border-color: #014c92 !important;
 }
 
 :root[data-theme='light'] [class*='bg-[#0d1117]'] {
@@ -92,11 +92,11 @@ body {
 }
 
 :root[data-theme='light'] [class*='bg-[#161b22]'] {
-  background-color: #f8f8fa !important;
+  background-color: #f3f3f7 !important;
 }
 
 :root[data-theme='light'] [class*='bg-[#21262d]'] {
-  background-color: #e1e1e6 !important;
+  background-color: #f1f0ee !important;
 }
 
 :root[data-theme='light'] [class*='text-[#e6edf3]'],

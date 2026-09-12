@@ -106,7 +106,7 @@ export default function DevPortalClient({ initialItems }: { initialItems: Item[]
   return (
     <div>
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Dev Portal</h1>
+        <h1 className="text-2xl font-bold">MindSpace</h1>
         <div className="flex gap-2">
           <select value={kind} onChange={(event) => setKind(event.target.value)} className="rounded border border-[#2b333d] bg-[#161b22] px-2 py-2 text-sm">
             {KINDS.map((value) => <option key={value} value={value}>{value}</option>)}
@@ -114,7 +114,7 @@ export default function DevPortalClient({ initialItems }: { initialItems: Item[]
           <button onClick={addItem} className="rounded bg-[#4ea1ff] px-4 py-2 text-sm font-semibold text-black">+ New</button>
         </div>
       </div>
-      <p className="mb-6 text-[#9aa7b4]">Create Markdown, documents, spreadsheets, and presentations. Saved live.</p>
+      <p className="mb-6 text-[#9aa7b4]">Turn raw ideas into powerful docs, dynamic sheets, and slide decks—crafted instantly, saved live.</p>
 
       <div className="grid gap-3">
         {items.length === 0 && <p className="text-sm text-[#9aa7b4]">Nothing yet. Click “+ New” to create your first entry.</p>}
