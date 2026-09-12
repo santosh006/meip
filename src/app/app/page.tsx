@@ -19,7 +19,7 @@ export default async function AppPreview() {
     <Shell>
       <h1 className="text-2xl font-bold mb-1">StockFinder</h1>
       <p className="text-[#9aa7b4] mb-6">
-        Live preview of the customer-facing product — real data
+        Real data. Instant clarity. Precision market intelligence.
       </p>
       {recordsError ? (
         <p className="text-sm text-[#f85149]">Failed to load impact records: {recordsError.message}</p>
