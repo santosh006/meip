@@ -1,8 +1,8 @@
 import { createSupabaseServer } from '@/lib/supabase-server';
 import Shell from '@/components/Shell';
-import { ImpactRecord } from './impact/page';
+import Link from 'next/link';
 
-// export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 
 export default async function AppPreview() {
   const supabase = await createSupabaseServer();
@@ -10,6 +10,16 @@ export default async function AppPreview() {
     .from('impact_records')
     .select('*')
     .order('created_at', { ascending: false });
+
+  const { data: entities } = await supabase
+    .from('entities')
+    .select('name, ticker');
+
+  const tickerByCompany = new Map(
+    (entities ?? [])
+      .filter((entity) => entity.ticker)
+      .map((entity) => [entity.name, entity.ticker as string]),
+  );
 
   const dirColor = (d: string) =>
     d === 'positive' ? 'text-[#3fb950]'
@@ -23,12 +33,17 @@ export default async function AppPreview() {
         Live preview of the customer-facing product — real data
       </p>
       <div className="grid gap-3">
-        {(records ?? []).map((r) => (
-          <div key={r.id} className="bg-[#161b22] border border-[#2b333d] rounded-xl p-5">
-            <div className="flex justify-between">
-              <div className="font-semibold">{r.company}</div>
+        {(records ?? []).map((r) => {
+          const ticker = tickerByCompany.get(r.company) ?? r.security?.trim() ?? null;
+          const card = (
+            <div className="bg-[#161b22] border border-[#2b333d] rounded-xl p-5 transition-colors hover:border-[#4ea1ff]">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="font-semibold">{r.company}</div>
+                {ticker && <div className="mt-1 text-xs text-[#4ea1ff]">View analysis →</div>}
+              </div>
               <span className={`text-sm font-medium ${dirColor(r.direction ?? '')}`}>
-                {r.direction}
+                {r.direction ?? 'neutral'}
               </span>
             </div>
             <div className="text-sm text-[#9aa7b4] mt-1">
@@ -41,8 +56,21 @@ export default async function AppPreview() {
               <span className="px-2 py-1 rounded-full bg-[#21262d] border border-[#2b333d]">materiality: {r.materiality}</span>
               <span className="px-2 py-1 rounded-full bg-[#21262d] border border-[#2b333d]">confidence: {r.confidence}</span>
             </div>
-          </div>
-        ))}
+            </div>
+          );
+
+          return ticker ? (
+            <Link
+              key={r.id}
+              href={`/app/analysis1/${encodeURIComponent(ticker)}`}
+              className="block rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4ea1ff]"
+            >
+              {card}
+            </Link>
+          ) : (
+            <div key={r.id}>{card}</div>
+          );
+        })}
       </div>
     </Shell>
   );
