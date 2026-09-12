@@ -156,18 +156,49 @@ export default function DevPortalClient({ initialItems }: { initialItems: Item[]
 function EditCard({ item, onSave, onCancel }: { item: Item; onSave: (id: string, title: string, content: string) => void; onCancel: () => void }) {
   const [title, setTitle] = useState(item.title);
   const [content, setContent] = useState(item.content ?? '');
+  const [showPreview, setShowPreview] = useState(false);
+  const [isFullPage, setIsFullPage] = useState(false);
+
+  const supportsPreview = ['docs', 'markdown', 'presentation'].includes(item.kind);
+
   return (
-    <div className="mt-6 border-t border-[#2b333d] pt-5">
-      <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Title" className="mb-3 w-full rounded border border-[#2b333d] bg-[#0d1117] px-3 py-2 outline-none focus:border-[#4ea1ff]" />
+    <div className={isFullPage ? 'fixed inset-0 z-[60] flex flex-col overflow-hidden bg-[#161b22] p-6' : 'mt-6 border-t border-[#2b333d] pt-5'}>
+      <div className="mb-3 flex items-center gap-2">
+        <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Title" className="min-w-0 flex-1 rounded border border-[#2b333d] bg-[#0d1117] px-3 py-2 outline-none focus:border-[#4ea1ff]" />
+        {supportsPreview && (
+          <>
+            <button type="button" onClick={() => setShowPreview((value) => !value)} className="whitespace-nowrap rounded border border-[#2b333d] px-3 py-2 text-sm hover:border-[#4ea1ff]">
+              {showPreview ? 'Hide preview' : 'Show preview'}
+            </button>
+            <button type="button" onClick={() => setIsFullPage((value) => !value)} className="whitespace-nowrap rounded border border-[#2b333d] px-3 py-2 text-sm hover:border-[#4ea1ff]">
+              {isFullPage ? 'Exit full page' : 'Full page'}
+            </button>
+          </>
+        )}
+        {item.kind === 'excel' && (
+          <button type="button" onClick={() => setIsFullPage((value) => !value)} className="whitespace-nowrap rounded border border-[#2b333d] px-3 py-2 text-sm hover:border-[#4ea1ff]">
+            {isFullPage ? 'Exit full page' : 'Full page'}
+          </button>
+        )}
+      </div>
       {item.kind === 'excel' ? (
         <SpreadsheetEditor value={content} onChange={setContent} />
+      ) : supportsPreview ? (
+        <div className={`min-h-0 ${showPreview ? 'grid flex-1 grid-cols-2 gap-3' : 'flex flex-1'}`}>
+          <textarea value={content} onChange={(event) => setContent(event.target.value)} placeholder={item.kind === 'presentation' ? 'Write slide content here…' : item.kind === 'markdown' ? 'Write Markdown here…' : 'Write your document here…'} className="min-h-80 w-full resize-none rounded border border-[#2b333d] bg-[#0d1117] px-3 py-2 text-sm leading-6 outline-none focus:border-[#4ea1ff]" />
+          {showPreview && (
+            <div className="overflow-auto rounded border border-[#2b333d] bg-[#0d1117] px-4 py-3">
+              <ItemPreview item={{ ...item, title, content }} />
+            </div>
+          )}
+        </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">
           <textarea value={content} onChange={(event) => setContent(event.target.value)} placeholder={item.kind === 'markdown' || item.kind === 'presentation' ? 'Write Markdown here…' : 'Write content here…'} rows={10} className="w-full resize-none rounded border border-[#2b333d] bg-[#0d1117] px-3 py-2 font-mono text-sm outline-none focus:border-[#4ea1ff]" />
           <div className="overflow-auto rounded border border-[#2b333d] bg-[#0d1117] px-3 py-2"><ItemPreview item={{ ...item, title, content }} /></div>
         </div>
       )}
-      <div className="mt-3 flex gap-2">
+      <div className="mt-3 flex shrink-0 gap-2">
         <button type="button" onClick={() => onSave(item.id, title, content)} className="rounded bg-[#4ea1ff] px-4 py-2 text-sm font-semibold text-black">Save</button>
         <button type="button" onClick={onCancel} className="rounded border border-[#2b333d] px-4 py-2 text-sm">Cancel</button>
       </div>
