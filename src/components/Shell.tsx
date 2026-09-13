@@ -16,12 +16,15 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     router.refresh();
   }
 
-  const link = (href: string, label: string, icon: string) => (
+  const link = (href: string, label: string, icon: string) => {
+  const isActive = href === '/app' ? path === '/app' : path.startsWith(href);
+
+  return (
     <Link
       href={href}
       title={isCollapsed ? label : undefined}
       className={`flex items-center gap-3 rounded px-3 py-2 text-sm ${isCollapsed ? 'justify-center' : ''} ${
-        path.startsWith(href)
+        isActive
           ? 'bg-[#4ea1ff1f] text-[#4ea1ff]'
           : 'text-[#9aa7b4] hover:bg-[#1c2430]'
       }`}
@@ -30,6 +33,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       {!isCollapsed && label}
     </Link>
   );
+};
+
 
 
   return (
@@ -50,6 +55,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         <nav className="flex flex-col gap-1">
           {link('/dev-portal', 'Foundry', '⌘')}
           {link('/app', 'StockFinder', '◈')}
+          {link('/app/news', 'NewsFinder', '◉')}
         </nav>
         <div className="mt-auto mb-10 flex flex-col gap-1">
           <button
