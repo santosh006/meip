@@ -132,6 +132,7 @@ export type Database = {
           id: string
           impact_direction: string | null
           impact_score: number | null
+          materiality: string | null
           occurred_at: string
           rationale: string | null
           raw: Json | null
@@ -150,6 +151,7 @@ export type Database = {
           id?: string
           impact_direction?: string | null
           impact_score?: number | null
+          materiality?: string | null
           occurred_at: string
           rationale?: string | null
           raw?: Json | null
@@ -168,6 +170,7 @@ export type Database = {
           id?: string
           impact_direction?: string | null
           impact_score?: number | null
+          materiality?: string | null
           occurred_at?: string
           rationale?: string | null
           raw?: Json | null
@@ -200,6 +203,8 @@ export type Database = {
           confidence: number | null
           created_at: string | null
           direction: string | null
+          entity_id: string | null
+          event_id: string | null
           event_status: string | null
           event_type: string | null
           evidence_url: string | null
@@ -215,6 +220,8 @@ export type Database = {
           confidence?: number | null
           created_at?: string | null
           direction?: string | null
+          entity_id?: string | null
+          event_id?: string | null
           event_status?: string | null
           event_type?: string | null
           evidence_url?: string | null
@@ -230,6 +237,8 @@ export type Database = {
           confidence?: number | null
           created_at?: string | null
           direction?: string | null
+          entity_id?: string | null
+          event_id?: string | null
           event_status?: string | null
           event_type?: string | null
           evidence_url?: string | null
@@ -240,7 +249,22 @@ export type Database = {
           security?: string | null
           summary?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "impact_records_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impact_records_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sources: {
         Row: {
