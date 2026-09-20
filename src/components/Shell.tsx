@@ -56,6 +56,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           {link('/dev-portal', 'Foundry', '⌘')}
           {link('/app', 'StockFinder', '◈')}
           {link('/app/news', 'NewsFinder', '◉')}
+          {link('/app/upload', 'DocVault', '🗄')}
         </nav>
         <div className="mt-auto mb-10 flex flex-col gap-1">
           <button

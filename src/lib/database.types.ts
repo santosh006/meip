@@ -56,6 +56,42 @@ export type Database = {
         }
         Relationships: []
       }
+      document_index: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          doc_id: string
+          file_name: string | null
+          file_size_bytes: number
+          mime_type: string | null
+          r2_object_key: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          doc_id: string
+          file_name?: string | null
+          file_size_bytes: number
+          mime_type?: string | null
+          r2_object_key: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          doc_id?: string
+          file_name?: string | null
+          file_size_bytes?: number
+          mime_type?: string | null
+          r2_object_key?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       entities: {
         Row: {
           aliases: string[] | null
