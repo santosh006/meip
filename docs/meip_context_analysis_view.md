@@ -36,39 +36,94 @@ The local development server is normally available at `http://localhost:3000`.
 
 ## 3. Repository Layout
 
-```text
-meip/
-├── src/
-│   ├── app/
-│   │   ├── page.tsx                         # Root redirect
-│   │   ├── login/page.tsx                   # Supabase email/password login
-│   │   ├── dev-portal/page.tsx              # Server wrapper for workspace
-│   │   ├── dev-portal/DevPortalClient.tsx   # Workspace CRUD UI
-│   │   └── app/
-│   │       ├── page.tsx                     # CustomerApp / impact preview
-│   │       ├── impact/page.tsx              # Impact records list route
-│   │       ├── impact/ImpactClient.tsx      # Client filtering/rendering
-│   │       └── analysis1/[entityId]/page.tsx # Entity analysis route
-│   ├── components/
-│   │   ├── Shell.tsx                        # Authenticated navigation shell
-│   │   └── analysis/
-│   │       ├── AnalysisFullPage.tsx         # Prototype client analysis page
-│   │       ├── AnalysisOverlay.tsx          # Prototype API-driven overlay
-│   │       └── StockClickHandler.tsx        # Prototype click wrapper
-│   └── lib/
-│       ├── database.types.ts                # Generated Supabase TypeScript schema
-│       ├── supabase.ts                      # Browser Supabase client
-│       ├── supabase-server.ts               # Server Supabase client
-│       ├── api/analysis.ts                  # Prototype analysis API types/client
-│       └── scoring/
-│           ├── index.ts                     # Event scoring rules
-│           └── persist.ts                   # Event + impact record persistence
-├── supabase/
-│   └── migrations/                          # Tracked database migrations
-├── public/
-├── package.json
-└── tsconfig.json
 ```
+├── AGENTS.md
+├── CLAUDE.md
+├── README.md
+├── docs
+│   ├── ai_agent_prompt.md
+│   └── meip_context_analysis_view.md
+├── eslint.config.mjs
+├── llm_init_instrc.md
+├── next-env.d.ts
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── project_details.html
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── src
+│   ├── app
+│   │   ├── api
+│   │   │   └── ingest
+│   │   │       └── route.ts
+│   │   ├── app
+│   │   │   ├── CustomerAppClient.tsx
+│   │   │   ├── analysis
+│   │   │   │   ├── [entityId]
+│   │   │   │   │   └── page.tsx                                # Entity analysis route
+│   │   │   │   └── [ticker]
+│   │   │   ├── impact
+│   │   │   │   ├── ImpactClient.tsx                            # Client filtering/rendering
+│   │   │   │   └── page.tsx                                    # Impact records list route
+│   │   │   ├── news
+│   │   │   │   ├── NewsFinderClient.tsx
+│   │   │   │   ├── [event]
+│   │   │   │   │   ├── NewsAnalysisClient.tsx
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── page.tsx
+│   │   │   ├── page.tsx                                        # CustomerApp / impact preview
+│   │   │   └── upload
+│   │   │       └── page.tsx
+│   │   ├── dev-portal
+│   │   │   ├── DevPortalClient.tsx                             # Workspace CRUD UI
+│   │   │   └── page.tsx                                        # Server wrapper for workspace
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   ├── login
+│   │   │   └── page.tsx                                        # Supabase email/password login
+│   │   └── page.tsx                                            # Root redirect
+│   ├── components
+│   │   ├── Shell.tsx                                           # Authenticated navigation shell
+│   │   ├── ThemeToggle.tsx
+│   │   ├── analysis
+│   │   │   ├── AnalysisFullPage.tsx                            # Prototype client analysis page
+│   │   │   ├── AnalysisOverlay.tsx                             # Prototype API-driven overlay
+│   │   │   └── StockClickHandler.tsx                           # Prototype click wrapper
+│   │   └── upload
+│   │       ├── DropZone.tsx
+│   │       ├── MetadataForm.tsx
+│   │       ├── UploadPanel.tsx
+│   │       └── UploadResultBadge.tsx
+│   ├── lib
+│   │   ├── api
+│   │   │   └── analysis.ts                                     # Prototype analysis API types/client
+│   │   ├── database.types.ts                                   # Generated Supabase TypeScript schema
+│   │   ├── ingestion
+│   │   │   ├── hash.ts
+│   │   │   ├── ingest.ts
+│   │   │   └── r2.ts
+│   │   ├── scoring
+│   │   │   ├── index.ts                                        # Event scoring rules
+│   │   │   └── persist.ts                                      # Event + impact record persistence
+│   │   ├── supabase-server.ts                                  # Server Supabase client
+│   │   └── supabase.ts                                         # Browser Supabase client
+│   └── middleware.ts
+├── supabase
+│   └── migrations                                              # Tracked database migrations
+│       ├── 20260910145900_initial_schema.sql
+│       ├── 20260912120000_impact_records_read_policy.sql
+│       ├── 20260912123000_allow_public_entity_reads.sql
+│       ├── 20260912124000_grant_entity_reads.sql
+│       ├── 20260912130000_impact_records_foreign_keys.sql
+│       └── 20260919000000_document_index.sql
+└── tsconfig.json
 
 ## 4. Routes and User Flows
 
