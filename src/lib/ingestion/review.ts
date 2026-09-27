@@ -1,3 +1,4 @@
+import { hostedNews, hostedReview } from './hosted';
 import { persistAcceptedNews } from './persist-news';
 import { NextResponse, type NextRequest } from 'next/server';
 import { authorize, apiError, jsonBody } from '@/lib/api/auth';
@@ -17,6 +18,7 @@ export async function review(req: NextRequest, decision: Decision) {
   try {
     const { supabase, user } = await authorize(req);
     const body = reviewBody(await jsonBody(req), decision);
+    if (hostedNews()) return NextResponse.json(await hostedReview(supabase, user.id, body, decision));
     const prior = isReviewed(body.articleId);
     if (prior) {
       if (prior !== decision) throw new InputError('Article already reviewed with a different decision', 409);

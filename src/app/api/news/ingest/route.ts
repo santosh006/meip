@@ -1,3 +1,4 @@
+import { hostedNews, newsRpc } from '@/lib/ingestion/hosted';
 import { NextResponse, type NextRequest } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import { authorize, apiError, jsonBody } from '@/lib/api/auth';
@@ -6,8 +7,9 @@ import { db } from '@/lib/newsdb';
 export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   try {
-    const { user } = await authorize(req);
+    const { user, supabase } = await authorize(req);
     const payload = ingestBody(await jsonBody(req));
+    if (hostedNews()) return NextResponse.json(await newsRpc(supabase, 'enqueue', payload), { status: 202 });
     const jobId = db().transaction(() => {
       const active = db().prepare("SELECT id FROM ingestion_jobs WHERE requested_by=? AND status IN ('queued','running') LIMIT 1").get(user.id) as {id: string} | undefined;
       if (active) throw new InputError('An ingestion job is already pending. Check its status before starting another.', 409);
@@ -20,8 +22,9 @@ export async function POST(req: NextRequest) {
 }
 export async function GET(req: NextRequest) {
   try {
-    const { user } = await authorize(req);
+    const { user, supabase } = await authorize(req);
     const id = uuid(req.nextUrl.searchParams.get('id') ?? undefined, 'id');
+    if (hostedNews()) return NextResponse.json(await newsRpc(supabase, 'job', { id }));
     const row = (id
       ? db().prepare('SELECT id,status,result FROM ingestion_jobs WHERE id=? AND requested_by=?').get(id, user.id)
       : db().prepare("SELECT id,status,result FROM ingestion_jobs WHERE requested_by=? ORDER BY created_at DESC, rowid DESC LIMIT 1").get(user.id)

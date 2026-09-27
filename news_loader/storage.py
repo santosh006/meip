@@ -68,6 +68,12 @@ CREATE TABLE IF NOT EXISTS run_log (
 
 
 class Store:
+    def __new__(cls, path=None):
+        if os.environ.get("NEWS_STORAGE") == "supabase":
+            from hosted import HostedStore
+            return HostedStore()
+        return super().__new__(cls)
+
     def __init__(self, path: Path | None = None):
         base = data_dir()
         self.db_path = path or Path(os.environ.get("NEWS_DB_PATH", str(base / "news.sqlite")))

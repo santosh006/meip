@@ -1,3 +1,4 @@
+import { hostedNews } from './hosted';
 import { persistAcceptedNews } from './persist-news';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, TablesInsert } from '@/lib/database.types';
@@ -6,6 +7,8 @@ import { newsEventId } from './news-event';
 
 /** Materialize older, already-approved decisions once, without changing review status. */
 export async function reconcileAcceptedNews(supabase: SupabaseClient<Database>) {
+  // Hosted reviews commit the event atomically; legacy SQLite recovery runs only on its host.
+  if (hostedNews()) return { remaining: false };
   const reviews = unexportedAcceptedReviews();
   for (const review of reviews) {
     const { data: impact, error } = await supabase.from('impact_records')

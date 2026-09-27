@@ -1,0 +1,9 @@
+services:
+  worker:
+    build:
+      context: .
+      target: worker
+    env_file: .env.worker
+    environment:
+      NEWS_STORAGE: supabase
+    restart: unless-stopped

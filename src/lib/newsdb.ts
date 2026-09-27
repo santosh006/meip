@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import path from "node:path";
 import { readFileSync, mkdirSync } from 'node:fs';
 import { loaderRoot, newsDbPath } from './ingestion/config';
+import { InputError } from './api/validation';
 
 // ---------------------------------------------------------------------------
 // Connection
@@ -12,6 +13,12 @@ import { loaderRoot, newsDbPath } from './ingestion/config';
 let _conn: Database.Database | null = null;
 
 export function db(): Database.Database {
+  if (process.env.VERCEL === '1') {
+    throw new InputError(
+      'News ingestion is unavailable on this deployment. Its SQLite database and Python worker require a shared persistent host. Configure hosted ingestion storage or deploy the app and worker together; retrying will not resolve this.',
+      503,
+    );
+  }
   if (!_conn) {
     mkdirSync(path.dirname(newsDbPath), { recursive: true });
     _conn = new Database(newsDbPath);
