@@ -1,0 +1,26 @@
+services:
+  app:
+    build:
+      context: .
+      target: app
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+    env_file: .env.local
+    environment:
+      NEWS_DB_PATH: /data/news.sqlite
+    ports: ["3000:3000"]
+    volumes: ["news-data:/data"]
+    restart: unless-stopped
+  worker:
+    build:
+      context: .
+      target: worker
+    env_file: .env.local
+    environment:
+      NEWS_DB_PATH: /data/news.sqlite
+      DATA_DIR: /data
+    volumes: ["news-data:/data"]
+    restart: unless-stopped
+volumes:
+  news-data:

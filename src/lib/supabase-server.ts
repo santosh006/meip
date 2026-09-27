@@ -5,8 +5,10 @@ import type { Database } from './database.types';
 export async function createSupabaseServer() {
   const cookieStore = await cookies();
   
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) throw new Error('Supabase configuration missing');
 
   return createServerClient<Database>(
     supabaseUrl,

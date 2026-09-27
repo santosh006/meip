@@ -86,7 +86,7 @@ export function scoreEvent(e: RawEvent): ScoredEvent {
   const impactScore = Math.round(magnitude * sign);
 
   // 5. confidence from source credibility + metric completeness
-  const cred = e.sourceCredibility ?? 0.5;
+  const cred = Number.isFinite(e.sourceCredibility) ? Math.min(1, Math.max(0, e.sourceCredibility!)) : 0.5;
   const completeness = Object.keys(metrics).length ? 0.2 : 0;
   const confidence = Math.min(1, +(0.5 * cred + 0.3 + completeness).toFixed(2));
   reasons.push(`confidence from source ${cred} + metrics`);

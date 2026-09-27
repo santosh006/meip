@@ -235,9 +235,18 @@ export type Database = {
       }
       impact_records: {
         Row: {
+          headline: string | null
+          publisher: string | null
+          published_at: string | null
+          source: string | null
+          kind: string | null
+          tickers: string[] | null
+          sentiment_label: string | null
+          raw: Json | null
           company: string
           confidence: number | null
           created_at: string | null
+          dedupe_key: string | null
           direction: string | null
           entity_id: string | null
           event_id: string | null
@@ -252,9 +261,18 @@ export type Database = {
           summary: string | null
         }
         Insert: {
+          headline?: string | null
+          publisher?: string | null
+          published_at?: string | null
+          source?: string | null
+          kind?: string | null
+          tickers?: string[] | null
+          sentiment_label?: string | null
+          raw?: Json | null
           company: string
           confidence?: number | null
           created_at?: string | null
+          dedupe_key?: string | null
           direction?: string | null
           entity_id?: string | null
           event_id?: string | null
@@ -269,9 +287,18 @@ export type Database = {
           summary?: string | null
         }
         Update: {
+          headline?: string | null
+          publisher?: string | null
+          published_at?: string | null
+          source?: string | null
+          kind?: string | null
+          tickers?: string[] | null
+          sentiment_label?: string | null
+          raw?: Json | null
           company?: string
           confidence?: number | null
           created_at?: string | null
+          dedupe_key?: string | null
           direction?: string | null
           entity_id?: string | null
           event_id?: string | null
@@ -391,7 +418,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      ingest_scored_event: { Args: { event_data: Json; impact_data: Json }; Returns: Json }
+      search_event_ids: { Args: { term: string; page_offset: number; page_limit: number }; Returns: {id: string}[] }
     }
     Enums: {
       [_ in never]: never
