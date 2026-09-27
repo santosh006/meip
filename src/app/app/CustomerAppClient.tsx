@@ -1,57 +1,35 @@
 'use client';
 
-import { useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { groupBy } from '@/lib/queries';
 import type { Tables } from '@/lib/database.types';
 
 type Entity = Pick<Tables<'entities'>, 'id' | 'name' | 'ticker' | 'sector'>;
-type ImpactRecord = Tables<'impact_records'>;
+type ImpactRecord = import('@/lib/queries').ImpactRecord;
 
 type CustomerAppClientProps = {
   entities: Entity[];
   records: ImpactRecord[];
+  counts: Record<string, number>;
 };
 
-export default function CustomerAppClient({ entities, records }: CustomerAppClientProps) {
-  const [query, setQuery] = useState('');
+export default function CustomerAppClient({ entities, records, counts }: CustomerAppClientProps) {
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
-  const deferredQuery = useDeferredValue(query.trim().toLowerCase());
-  const isSearching = query.trim().toLowerCase() !== deferredQuery;
-
-  const suggestions = useMemo(() => {
-    if (!deferredQuery) return [];
-
-    return entities
-      .filter((entity) =>
-        [entity.name, entity.ticker, entity.sector]
-          .filter(Boolean)
-          .some((value) => value!.toLowerCase().includes(deferredQuery)),
-      )
-      .slice(0, 8);
-  }, [deferredQuery, entities]);
-
-  const selectedEntity = entities.find((entity) => entity.id === selectedEntityId);
-
-  const visibleRecords = selectedEntity
-    ? records.filter((record) => record.company === selectedEntity.name)
-    : records;
-
-  const visibleEntities = useMemo(() => {
-    if (selectedEntityId) return [];
-    if (deferredQuery) return suggestions;
-    return entities;
-  }, [selectedEntityId, deferredQuery, suggestions, entities]);
+  const recordsByEntity = useMemo(() => groupBy(records, record => record.entity_id), [records]);
+  const selectedEntity = entities.find(entity => entity.id === selectedEntityId);
+  const visibleRecords = selectedEntityId ? recordsByEntity.get(selectedEntityId) ?? [] : [];
+  const visibleEntities = selectedEntityId ? [] : entities;
 
   function clearSelection() {
     setSelectedEntityId(null);
     setIsOverlayOpen(false);
-    setQuery('');
   }
 
   function openAnalysis(entityId: string) {
     setSelectedEntityId(entityId);
     setIsOverlayOpen(true);
-    setQuery('');
   }
 
   useEffect(() => {
@@ -59,7 +37,6 @@ export default function CustomerAppClient({ entities, records }: CustomerAppClie
       if (event.key === 'Escape') {
         setSelectedEntityId(null);
         setIsOverlayOpen(false);
-        setQuery('');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -68,68 +45,6 @@ export default function CustomerAppClient({ entities, records }: CustomerAppClie
 
   return (
     <>
-      <div className="relative mb-6 ml-auto w-full max-w-md">
-        <div className="flex gap-2">
-          <input
-            id="stock-search"
-            aria-label="Search stocks by company or ticker"
-            type="search"
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setSelectedEntityId(null);
-            }}
-            placeholder="Search company or ticker"
-            autoComplete="off"
-            className="min-w-0 flex-1 rounded border border-[#2b333d] bg-[#161b22] px-3 py-2 text-sm outline-none focus:border-[#4ea1ff]"
-          />
-          {(query || selectedEntityId) && (
-            <button
-              type="button"
-              onClick={clearSelection}
-              className="rounded border border-[#2b333d] px-3 py-2 text-sm text-[#9aa7b4] hover:text-white"
-            >
-              Clear
-            </button>
-          )}
-        </div>
-
-        {isSearching && (
-          <p className="mt-2 text-sm text-[#9aa7b4]" role="status">
-            Searching…
-          </p>
-        )}
-
-        {!isSearching && deferredQuery && suggestions.length === 0 && (
-          <p className="mt-2 text-sm text-[#9aa7b4]" role="status">
-            No stocks found.
-          </p>
-        )}
-
-        {!isSearching && suggestions.length > 0 && !selectedEntityId && (
-          <ul
-            className="absolute z-10 mt-1 w-full overflow-hidden rounded border border-[#2b333d] bg-[#161b22] shadow-lg"
-            role="listbox"
-          >
-            {suggestions.map((entity) => (
-              <li key={entity.id} role="option" aria-selected={false}>
-                <button
-                  type="button"
-                  onClick={() => openAnalysis(entity.id)}
-                  className="block w-full px-3 py-3 text-left hover:bg-[#1c2430] focus:bg-[#1c2430] focus:outline-none"
-                >
-                  <span className="block font-medium">{entity.name}</span>
-                  <span className="text-xs text-[#9aa7b4]">
-                    {entity.ticker ?? 'No ticker'}
-                    {entity.sector ? ` · ${entity.sector}` : ''}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
       {selectedEntity && (
         <div className="mb-6 flex items-center justify-between rounded border border-[#4ea1ff66] bg-[#161b22] px-4 py-3 text-sm">
           <span>
@@ -147,7 +62,7 @@ export default function CustomerAppClient({ entities, records }: CustomerAppClie
 
       <div className="grid gap-3">
         {visibleEntities.map((entity) => {
-          const recordCount = records.filter((r) => r.company === entity.name).length;
+          const recordCount = counts[entity.id] ?? 0;
           return (
             <button
               key={entity.id}
@@ -175,7 +90,7 @@ export default function CustomerAppClient({ entities, records }: CustomerAppClie
         })}
       </div>
 
-      {visibleEntities.length === 0 && !deferredQuery && !selectedEntityId && (
+      {visibleEntities.length === 0 && !selectedEntityId && (
         <p className="text-sm text-[#9aa7b4]" role="status">
           No stocks found.
         </p>
@@ -212,6 +127,8 @@ export default function CustomerAppClient({ entities, records }: CustomerAppClie
               </button>
             </div>
             <div className="mt-5 grid gap-4">
+              <Link className="text-[#4ea1ff]" href={`/app/analysis/${selectedEntity.id}`}>View all {counts[selectedEntity.id] ?? 0} impact records →</Link>
+              <p className="text-xs text-[#9aa7b4]">Latest impact records</p>
               {visibleRecords.length === 0 ? (
                 <p className="text-sm text-[#9aa7b4]">
                   No impact records found for this stock.

@@ -1,39 +1,29 @@
+import PageControls from '@/components/PageControls';
+import { pagination, IMPACT_COLUMNS, EVENT_COLUMNS, PAGE_SIZE, type SearchParams } from '@/lib/queries';
 import { createSupabaseServer } from '@/lib/supabase-server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import NewsAnalysisClient from './NewsAnalysisClient';
 
 type Props = {
-  params: { eventId: string };
+  searchParams: SearchParams;
+  params: Promise<{ event: string }>;
 };
 
-export default async function NewsAnalysisPage({ params }: Props) {
+export default async function NewsAnalysisPage({ params, searchParams }: Props) {
   const supabase = await createSupabaseServer();
-  const { eventId } = params;
+  const { event: eventId } = await params;
 
-  // Fetch the event
-  const { data: event } = await supabase
-    .from('events')
-    .select('*')
-    .eq('id', eventId)
-    .single();
-
+  const { page, from, to } = await pagination(searchParams);
+  const [eventResult, recordsResult] = await Promise.all([
+    supabase.from('events').select(`${EVENT_COLUMNS},entity:entities(id,name,ticker,sector)`).eq('id', eventId).maybeSingle(),
+    supabase.from('impact_records').select(`${IMPACT_COLUMNS},entity:entities(id,name,ticker,sector)`, { count: 'exact' }).eq('event_id', eventId)
+      .order('confidence', { ascending: false }).order('id').range(from, to),
+  ]);
+  const { data: event, error } = eventResult;
+  if (error || recordsResult.error) return <p>Unable to load event analysis.</p>;
   if (!event) notFound();
-
-  // Fetch all impact records for this event, joined to entities
-  const { data: impactRecords } = await supabase
-    .from('impact_records')
-    .select(`
-      *,
-      entity:entities (
-        id,
-        name,
-        ticker,
-        sector
-      )
-    `)
-    .eq('event_id', eventId)
-    .order('confidence', { ascending: false });
+  const impactRecords = recordsResult.data;
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10">
@@ -46,6 +36,7 @@ export default async function NewsAnalysisPage({ params }: Props) {
       </Link>
 
       <NewsAnalysisClient event={event} impactRecords={impactRecords ?? []} />
+      <PageControls page={page} hasMore={page * PAGE_SIZE < (recordsResult.count ?? 0)} />
     </main>
   );
 }

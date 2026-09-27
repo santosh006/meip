@@ -1,11 +1,11 @@
 'use client';
 
-import Link from 'next/link';
+import { reportedTickers, safeSourceUrl } from '@/lib/news-presentation';
 import type { Tables } from '@/lib/database.types';
 
 type Entity = Pick<Tables<'entities'>, 'id' | 'name' | 'ticker' | 'sector'>;
-type ImpactRecord = Tables<'impact_records'> & { entity: Entity | null };
-type Event = Tables<'events'>;
+type ImpactRecord = import('@/lib/queries').ImpactRecord & { entity: Entity | null };
+type Event = Tables<'events'> & { entity?: Entity | null };
 
 type Props = {
   event: Event;
@@ -27,6 +27,10 @@ const MATERIALITY_COLOR: Record<string, string> = {
 export default function NewsAnalysisClient({ event, impactRecords }: Props) {
   const materiality = event.materiality?.toLowerCase() ?? 'low';
   const direction   = event.impact_direction?.toLowerCase() ?? 'neutral';
+
+  const raw = event.raw && typeof event.raw === 'object' && !Array.isArray(event.raw) ? event.raw : null;
+  const tickers = reportedTickers(raw?.tickers);
+  const sourceUrl = safeSourceUrl(event.source_url);
 
   return (
     <>
@@ -69,6 +73,9 @@ export default function NewsAnalysisClient({ event, impactRecords }: Props) {
           )}
         </div>
 
+        <p className="mt-3 text-sm text-[#9aa7b4]">{event.entity ? `Linked ticker: ${event.entity.ticker ?? event.entity.name}` : 'No ticker link — available for post-processing.'}</p>
+        {!event.entity && tickers.length > 0 && <p className="mt-2 text-sm text-[#9aa7b4]">Reported tickers: {tickers.join(', ')}</p>}
+        {sourceUrl && <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-[#4ea1ff]">Read original source ↗</a>}
         {event.summary && (
           <p className="mt-4 text-sm text-[#9aa7b4]">{event.summary}</p>
         )}
@@ -81,6 +88,7 @@ export default function NewsAnalysisClient({ event, impactRecords }: Props) {
         )}
       </div>
 
+      {impactRecords.length === 0 && <p className="text-sm text-[#9aa7b4]">No impact analysis yet. News is retained independently of stock relationships.</p>}
       {/* Affected stocks */}
       <div className="space-y-3">
         {impactRecords.map((record) => (
