@@ -130,7 +130,7 @@ export default function UploadPage() {
   return (
     <Shell>
       <div className="min-h-screen bg-[#0d1117] text-[#c9d1d9] p-6 max-w-3xl mx-auto">
-        <h1 className="text-xl font-semibold text-white mb-6">Document Ingestion</h1>
+        <h1 className="text-xl font-semibold text-white mb-6">Document Vault</h1>
 
         {/* Upload Form */}
         <form

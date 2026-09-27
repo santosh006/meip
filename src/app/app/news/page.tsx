@@ -19,9 +19,9 @@ export default async function NewsFinderPage({ searchParams }: {searchParams: Se
   }
   const { data, error, count } = await newsQuery(supabase, { search, from, to });
   const entities = new Map((data ?? []).flatMap(e => [e.entity, ...e.impact_preview.map(r => r.entity)]).filter(e => e !== null).map(e => [e.id, e]));
-  if (error) console.error('NewsFinder query failed', error);
+  if (error) console.error('News Market query failed', error);
   return <Shell>
-    <h1 className="text-2xl font-bold mb-4">NewsFinder</h1>
+    <h1 className="text-2xl font-bold mb-4">News Market</h1>
     {importWarning && <p role="status" className="mb-4 text-sm text-[#e3b341]">{importWarning}</p>}
     <SearchForm q={q} placeholder="Search events, company, or ticker" />
     {error ? <p role="alert">Unable to load events.</p> : <NewsFinderClient key={`${page}:${q}`} events={data ?? []} impactRecords={(data ?? []).flatMap(e => e.impact_preview)} entities={[...entities.values()]} counts={Object.fromEntries((data ?? []).map(e => [e.id, e.impact_count[0]?.count ?? 0]))} />}

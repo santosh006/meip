@@ -48,6 +48,20 @@ Vercel hosts the Next.js app; an always-running Python worker consumes the Supab
 
 Jobs use atomic `SKIP LOCKED` claims, 20-minute leases, and per-attempt tokens. Fetch subprocesses time out after 15 minutes; abandoned jobs become claimable after lease expiry. Multiple workers may run. Articles, raw archives, source logs, reviews, and jobs live in Supabase. Plan database backup and archive retention for your news volume.
 
+### Manual worker control on a Mac
+
+With `.env.worker` configured, run these from the project directory:
+
+```sh
+npm run worker:start
+npm run worker:status
+npm run worker:stop
+```
+
+Start runs the hosted worker in the background and avoids starting another copy when it is already running. Stop shuts down the worker and any current fetch subprocess. Saved articles and reviews remain in Supabase. An interrupted job becomes eligible for retry after its 20-minute lease expires. Stopping the worker does not stop the Vercel website; existing news remains available, but new fetching pauses. The offline message may take up to three minutes to appear.
+
+Logs: `news_loader/data/hosted-worker.log`. The worker does not automatically restart after a Mac reboot; run `npm run worker:start` again. For a local Next.js development server, use `npm run dev` and press Ctrl+C in that terminal to stop it.
+
 ### Existing SQLite data
 
 Stop the old worker and pause review activity during cutover. Keep the original database as a backup. Import pending articles, completed reviews, and pending review intents with worker credentials configured:
