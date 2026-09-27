@@ -418,6 +418,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      news_workspace: { Args: { action: string; args?: Json }; Returns: Json }
       ingest_scored_event: { Args: { event_data: Json; impact_data: Json }; Returns: Json }
       search_event_ids: { Args: { term: string; page_offset: number; page_limit: number }; Returns: {id: string}[] }
     }

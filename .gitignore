@@ -54,3 +54,4 @@ news_loader/__pycache__/
 *.sqlite-*
 *.worker.lock
 !/.env.example
+!/.env.worker.example

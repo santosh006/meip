@@ -49,6 +49,9 @@ def run_job(conn, row, lock_fd=None):
 def main():
     import fcntl
     load_env()
+    if os.environ.get("NEWS_STORAGE") == "supabase":
+        from hosted import main as hosted_main
+        return hosted_main()
     store = Store()
     # Exactly one worker per SQLite volume, including across process restarts.
     with open(str(store.db_path) + '.worker.lock', 'w') as lock:
