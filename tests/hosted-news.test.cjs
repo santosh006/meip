@@ -30,7 +30,8 @@ test('hosted routes use Supabase without opening local SQLite', async () => {
  assert.equal((await preview.GET(req('preview'))).status,200);
  assert.equal((await ingest.POST(req('ingest',{ticker:'TCS'}))).status,202);
  assert.equal((await ingest.GET(req('ingest'))).status,200);
- assert.equal((await accept.POST(req('accept',{articleId:'a'.repeat(40)}))).status,200);
+ assert.equal((await accept.POST(req('accept',{articleId:'a'.repeat(40)}))).status,409);
+ await require('../src/lib/ingestion/hosted.ts').hostedReview(client,'reviewer',{articleId:'a'.repeat(40)},'accepted');
  const review = calls.find(([,args]) => args.action==='review')[1];
  assert.equal(review.args.event.entity_id,null);
  assert.equal(review.args.event.raw.review.decision,'accepted');

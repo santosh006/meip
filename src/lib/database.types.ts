@@ -235,6 +235,9 @@ export type Database = {
       }
       impact_records: {
         Row: {
+          review_version_id: string | null
+          review_mapping_id: string | null
+          analysis_current: boolean
           headline: string | null
           publisher: string | null
           published_at: string | null
@@ -261,6 +264,9 @@ export type Database = {
           summary: string | null
         }
         Insert: {
+          review_version_id?: string | null
+          review_mapping_id?: string | null
+          analysis_current?: boolean
           headline?: string | null
           publisher?: string | null
           published_at?: string | null
@@ -287,6 +293,9 @@ export type Database = {
           summary?: string | null
         }
         Update: {
+          review_version_id?: string | null
+          review_mapping_id?: string | null
+          analysis_current?: boolean
           headline?: string | null
           publisher?: string | null
           published_at?: string | null
@@ -418,6 +427,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      review_workflow: { Args: { action: string; args?: Json }; Returns: Json }
       news_workspace: { Args: { action: string; args?: Json }; Returns: Json }
       ingest_scored_event: { Args: { event_data: Json; impact_data: Json }; Returns: Json }
       search_event_ids: { Args: { term: string; page_offset: number; page_limit: number }; Returns: {id: string}[] }

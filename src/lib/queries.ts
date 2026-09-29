@@ -2,7 +2,7 @@ import type { Tables } from './database.types';
 export const PAGE_SIZE = 25;
 export const IMPACT_COLUMNS = 'id,company,confidence,created_at,dedupe_key,direction,entity_id,event_id,event_status,event_type,evidence_url,horizon,materiality,sector,security,summary' as const;
 export const EVENT_COLUMNS = 'id,title,event_type,detected_at,occurred_at,entity_id,impact_direction,impact_score,confidence,materiality,summary,affected_metrics,rationale,significance,source_id,source_url,raw' as const;
-export type ImpactRecord = Omit<Tables<'impact_records'>, 'headline' | 'publisher' | 'published_at' | 'source' | 'kind' | 'tickers' | 'sentiment_label' | 'raw'>;
+export type ImpactRecord = Omit<Tables<'impact_records'>, 'review_version_id' | 'review_mapping_id' | 'analysis_current' | 'headline' | 'publisher' | 'published_at' | 'source' | 'kind' | 'tickers' | 'sentiment_label' | 'raw'>;
 export type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 export async function pagination(searchParams: SearchParams) {
   const p = await searchParams;

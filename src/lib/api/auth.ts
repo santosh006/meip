@@ -13,7 +13,7 @@ export async function authorize(req: NextRequest) {
   // This is a shared, authenticated analyst workspace; RLS enforces DB access.
   return { supabase, user };
 }
-export async function jsonBody(req: NextRequest) {
+export async function jsonBody(req: NextRequest, maxBytes = 32768) {
   const reader = req.body?.getReader();
   if (!reader) throw new InputError('Missing JSON body');
   const chunks: Uint8Array[] = [];
@@ -22,7 +22,7 @@ export async function jsonBody(req: NextRequest) {
     const { done, value } = await reader.read();
     if (done) break;
     size += value.byteLength;
-    if (size > 32768) { await reader.cancel(); throw new InputError('Request too large', 413); }
+    if (size > maxBytes) { await reader.cancel(); throw new InputError('Request too large', 413); }
     chunks.push(value);
   }
   try { return JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown; }

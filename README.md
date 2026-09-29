@@ -14,6 +14,8 @@ Use Node **22** (`nvm use`, then `npm ci`) and Python 3.12+.
 
 In SQLite mode, the npm worker launcher reads the same Next.js environment files as the app, respects `NEWSLOADER_PYTHON`, and normalizes the shared database path. A directly launched Python worker still needs its environment passed explicitly. The worker initializes the article and queue schemas, publishes the source catalogue, and executes queued jobs. Run only one worker per SQLite file. The web app and worker must share a persistent local filesystem, not an NFS mount or separate ephemeral serverless filesystems.
 
+Development uses Webpack to avoid a recurring Turbopack internal HMR error (`EcmascriptMergedChunkVersion` / missing cell). After updating, stop the existing development server with Ctrl+C, run `nvm use` and `npm run dev`, then reload the browser. Hot reload remains enabled. To explicitly try Turbopack again, use `npm run dev -- --turbopack`.
+
 ## Features and data flow
 
 - **StockFinder / NewsFinder:** server-side search and pages of 25 results, accurate record counts, previews of the latest five impacts, and links to paginated detail pages. Relationships use entity/event UUIDs.
@@ -93,3 +95,7 @@ Tests cover validation, scoring bounds, entity grouping, review retry/conflict h
 ### Accepted news returns PostgreSQL error 42501
 
 For the legacy SQLite review path, apply `supabase/migrations/20260927010000_allow_accepted_news_events.sql` in the target project's Supabase SQL Editor as an administrator. It is standalone and does not require the broader integrity migration. It grants authenticated SELECT/INSERT and permits inserts carrying an accepted review and a valid news dedupe key. RLS stays enabled, ticker/entity links remain optional, and anonymous access is not granted. No service-role key belongs in the browser or the acceptance API. After applying the policy, retry the original acceptance; the queued article and durable intent are preserved.
+
+## Structured news reviews
+
+See [Structured news review setup and verification](docs/structured-news-review.md) for reviewer access, versioned acceptance, Impact Records, and manual observations.
