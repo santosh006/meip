@@ -44,3 +44,14 @@ next-env.d.ts
 
 # supabase
 supabase/.temp/
+
+# newsloader
+news_loader/data/
+news_loader/.venv/
+news_loader/__pycache__/
+*.pyc
+*.sqlite
+*.sqlite-*
+*.worker.lock
+!/.env.example
+!/.env.worker.example

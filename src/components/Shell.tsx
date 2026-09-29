@@ -17,7 +17,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   }
 
   const link = (href: string, label: string, icon: string) => {
-  const isActive = href === '/app' ? path === '/app' : path.startsWith(href);
+  const isActive = href === '/app' ? path === '/app' : path === href || path.startsWith(href + '/');
 
   return (
     <Link
@@ -54,9 +54,10 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         )} */}
         <nav className="flex flex-col gap-1">
           {link('/dev-portal', 'Foundry', '⌘')}
-          {link('/app', 'StockFinder', '◈')}
-          {link('/app/news', 'NewsFinder', '◉')}
-          {link('/app/upload', 'DocVault', '🗄')}
+          {link('/app', 'Stock Yard', '◈')}
+          {link('/app/news', 'News Market', '◉')}
+          {link('/app/upload', 'Doc Vault', '🗄')}
+          {link('/app/news-ingestion', 'News Incubator', '🗄')}
         </nav>
         <div className="mt-auto mb-10 flex flex-col gap-1">
           <button

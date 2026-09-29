@@ -1,31 +1,27 @@
+import PageControls from '@/components/PageControls';
+import { pagination, IMPACT_COLUMNS, PAGE_SIZE, type SearchParams } from '@/lib/queries';
 import { notFound } from 'next/navigation';
 import { createSupabaseServer } from '@/lib/supabase-server';
 
 interface AnalysisPageProps {
+  searchParams: SearchParams;
   params: Promise<{ entityId: string }>;
 }
 
-export default async function EntityAnalysisPage({ params }: AnalysisPageProps) {
+export default async function EntityAnalysisPage({ params, searchParams }: AnalysisPageProps) {
   const supabase = await createSupabaseServer();
   const { entityId } = await params;
 
-  const { data: entity, error: entityError } = await supabase
-    .from('entities')
-    .select('id, name, ticker, sector')
-    .eq('id', entityId)
-    .maybeSingle();
-
-  if (entityError) {
-    return <p className="p-8 text-red-600">Failed to load entity: {entityError.message}</p>;
-  }
-
+  const { page, from, to } = await pagination(searchParams);
+  const [entityResult, recordsResult] = await Promise.all([
+    supabase.from('entities').select('id,name,ticker,sector').eq('id', entityId).maybeSingle(),
+    supabase.from('impact_records').select(IMPACT_COLUMNS, { count: 'exact' }).eq('entity_id', entityId)
+      .order('created_at', { ascending: false, nullsFirst: false }).order('id').range(from, to),
+  ]);
+  const { data: entity, error: entityError } = entityResult;
+  const { data: impactRecords, error: recordsError, count } = recordsResult;
+  if (entityError) return <p>Unable to load entity.</p>;
   if (!entity) return notFound();
-
-  const { data: impactRecords, error: recordsError } = await supabase
-    .from('impact_records')
-    .select('*')
-    .eq('company', entity.name)
-    .order('created_at', { ascending: false, nullsFirst: false });
 
   return (
     <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
@@ -64,6 +60,7 @@ export default async function EntityAnalysisPage({ params }: AnalysisPageProps) 
             ))}
           </div>
         )}
+        <PageControls page={page} hasMore={page * PAGE_SIZE < (count ?? 0)} />
       </section>
     </main>
   );

@@ -1,0 +1,10 @@
+node_modules
+.next
+.vercel
+.git
+.env*
+news_loader/.env*
+news_loader/.venv
+**/__pycache__
+news_loader/data
+*.sqlite*

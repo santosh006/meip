@@ -1,4 +1,5 @@
 "use client";
+import { validateUpload } from '@/lib/ingestion/upload-validation';
 import Shell from '@/components/Shell';
 import { useState, useEffect, useCallback } from "react";
 
@@ -7,11 +8,14 @@ interface DocFile {
   file_name: string | null;
   file_size_bytes: number | null;
   created_at: string | null;
+  status: string;
 }
 
 const COOLDOWN_SECONDS = 60;
 
 export default function UploadPage() {
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
   const [files, setFiles] = useState<DocFile[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -21,21 +25,29 @@ export default function UploadPage() {
   const [fileInputKey, setFileInputKey] = useState(0);
 
   const fetchFiles = useCallback(async () => {
-    setLoading(true);
     try {
-      const res = await fetch("/api/ingest", { cache: "no-store" });
+      const res = await fetch(`/api/ingest?page=${page}`, { cache: "no-store" });
       const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? 'Unable to load documents');
       setFiles(json.files ?? []);
+      setHasMore(json.hasMore ?? false);
     } catch {
-      // silently fail on background refresh
+      setMessage('Unable to load documents. Please retry.');
+      setMessageType('error');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page]);
 
   useEffect(() => {
-    fetchFiles();
-  }, [fetchFiles]);
+    const controller = new AbortController();
+    fetch(`/api/ingest?page=${page}`, { cache: 'no-store', signal: controller.signal })
+      .then(async res => { if (!res.ok) throw new Error('Unable to load documents'); return res.json(); })
+      .then(json => { setFiles(json.files ?? []); setHasMore(json.hasMore === true); })
+      .catch(error => { if (error.name !== 'AbortError') { setMessage('Unable to load documents. Please retry.'); setMessageType('error'); } })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [page]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -61,6 +73,8 @@ export default function UploadPage() {
       return;
     }
 
+    const invalid = validateUpload(file);
+    if (invalid) { setMessage(invalid); setMessageType('error'); return; }
     setUploading(true);
 
     try {
@@ -116,7 +130,7 @@ export default function UploadPage() {
   return (
     <Shell>
       <div className="min-h-screen bg-[#0d1117] text-[#c9d1d9] p-6 max-w-3xl mx-auto">
-        <h1 className="text-xl font-semibold text-white mb-6">Document Ingestion</h1>
+        <h1 className="text-xl font-semibold text-white mb-6">Document Vault</h1>
 
         {/* Upload Form */}
         <form
@@ -130,16 +144,6 @@ export default function UploadPage() {
               type="file"
               name="file"
               className="w-full text-sm text-[#c9d1d9] file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:bg-[#21262d] file:text-[#c9d1d9] hover:file:bg-[#30363d] cursor-pointer"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm text-[#8b949e] mb-1">Uploaded by (optional)</label>
-            <input
-              type="text"
-              name="created_by"
-              placeholder="e.g. analyst@meip.io"
-              className="w-full bg-[#0d1117] border border-[#30363d] rounded px-3 py-2 text-sm text-[#c9d1d9] placeholder-[#484f58] focus:outline-none focus:border-[#58a6ff]"
             />
           </div>
 
@@ -166,6 +170,11 @@ export default function UploadPage() {
           )}
         </form>
 
+        <nav className="flex gap-4 mb-4" aria-label="Document pages">
+          <button disabled={page === 1 || loading} onClick={() => { setLoading(true); setPage(page - 1); }}>Previous</button>
+          <span>Page {page}</span>
+          <button disabled={!hasMore || loading} onClick={() => { setLoading(true); setPage(page + 1); }}>Next</button>
+        </nav>
         {/* File List */}
         <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-5">
           <div className="flex items-center justify-between mb-4">
@@ -198,6 +207,7 @@ export default function UploadPage() {
                   </div>
                   <div className="text-right text-xs text-[#8b949e] ml-4 shrink-0">
                     <p>{formatBytes(f.file_size_bytes)}</p>
+                    <p>{f.status}</p>
                     <p>{formatDate(f.created_at)}</p>
                   </div>
                 </li>
