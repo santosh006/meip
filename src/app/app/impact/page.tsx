@@ -2,6 +2,7 @@ import PageControls, { SearchForm } from '@/components/PageControls';
 import { pagination, PAGE_SIZE, type SearchParams } from '@/lib/queries';
 import Shell from '@/components/Shell';
 import { createSupabaseServer } from '@/lib/supabase-server';
+import StructuredImpacts from './StructuredImpacts';
 import ImpactClient from './ImpactClient';
 
 export const dynamic = 'force-dynamic';
@@ -21,7 +22,9 @@ export default async function ImpactPage({ searchParams }: {searchParams: Search
   const supabase = await createSupabaseServer();
 
   const { page, q, search, from, to } = await pagination(searchParams);
-  let query = supabase.from('impact_records').select('id,company,direction,summary,materiality,confidence,created_at', { count: 'exact' });
+  const params = await searchParams;
+  const mode = params.mode === 'pending' ? 'pending' : 'ready';
+  let query = supabase.from('impact_records').select('id,company,direction,summary,materiality,confidence,created_at', { count: 'exact' }).is('review_version_id', null);
   if (search) query = query.or(`company.ilike.%${search}%,direction.ilike.%${search}%,summary.ilike.%${search}%`);
   const { data, error, count } = await query.order('created_at', { ascending: false, nullsFirst: false }).order('id').range(from, to);
 
@@ -46,5 +49,5 @@ export default async function ImpactPage({ searchParams }: {searchParams: Search
     created_at: row.created_at ?? '',
   }));
 
-  return <Shell><SearchForm q={q} placeholder="Search company, direction, or summary" /><ImpactClient records={records} /><PageControls page={page} q={q} hasMore={page * PAGE_SIZE < (count ?? 0)} /></Shell>;
+  return <Shell><SearchForm q={q} placeholder="Search company, direction, or summary" /><StructuredImpacts mode={mode} q={q} offset={from} /><h2 className="text-lg mt-6">Legacy impact records</h2><ImpactClient records={records} /><PageControls page={page} q={q} hasMore={page * PAGE_SIZE < (count ?? 0)} /></Shell>;
 }

@@ -1,8 +1,13 @@
 const { spawn } = require('node:child_process');
 const path = require('node:path');
+const devArgs = process.argv.slice(2);
+// Avoid Turbopack's recurring merged-chunk HMR crash; allow explicit opt-in.
+if (!devArgs.some(arg => ['--webpack', '--turbopack', '--turbo'].includes(arg))) {
+  devArgs.unshift('--webpack');
+}
 const children = [
   spawn(process.execPath, [path.join(__dirname, 'worker.cjs')], { stdio: 'inherit' }),
-  spawn(process.execPath, [require.resolve('next/dist/bin/next'), 'dev', ...process.argv.slice(2)], { stdio: 'inherit' }),
+  spawn(process.execPath, [require.resolve('next/dist/bin/next'), 'dev', ...devArgs], { stdio: 'inherit' }),
 ];
 let stopping = false;
 function stop(code) {

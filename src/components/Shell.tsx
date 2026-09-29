@@ -22,7 +22,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   return (
     <Link
       href={href}
-      title={isCollapsed ? label : undefined}
+      title={label}
       className={`flex items-center gap-3 rounded px-3 py-2 text-sm ${isCollapsed ? 'justify-center' : ''} ${
         isActive
           ? 'bg-[#4ea1ff1f] text-[#4ea1ff]'
@@ -30,7 +30,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       }`}
     >
       <span aria-hidden="true">{icon}</span>
-      {!isCollapsed && label}
+      {!isCollapsed && <span className="hidden sm:inline">{label}</span>}
     </Link>
   );
 };
@@ -38,14 +38,14 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
 
   return (
-    <div className={`min-h-screen grid ${isCollapsed ? 'grid-cols-[72px_1fr]' : 'grid-cols-[240px_1fr]'} bg-[#0d1117] text-[#e6edf3]`}>
+    <div className={`min-h-screen grid ${isCollapsed ? 'grid-cols-[72px_minmax(0,1fr)]' : 'grid-cols-[72px_minmax(0,1fr)] sm:grid-cols-[240px_minmax(0,1fr)]'} bg-[#0d1117] text-[#e6edf3]`}>
       <aside className="flex flex-col border-r border-[#2b333d] bg-[#161b22] p-4">
         <div
           className={`mb-6 font-semibold tracking-tight text-[#e6edf3] ${isCollapsed ? 'text-center text-lg' : 'text-xl leading-tight'}`}
           title={isCollapsed ? 'Market Intelligence Platform' : undefined}
           aria-label="Market Intelligence Platform"
         >
-          {isCollapsed ? 'MEIP' : 'Market Intelligence Platform'}
+          {isCollapsed ? 'MEIP' : <><span className="sm:hidden">MEIP</span><span className="hidden sm:inline">Market Intelligence Platform</span></>}
         </div>
         {/* {!isCollapsed && (
           <span className="mb-6 w-fit rounded-full border border-[#e3b34166] px-2 py-0.5 text-[10px] text-[#e3b341]">
@@ -58,6 +58,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           {link('/app/news', 'News Market', '◉')}
           {link('/app/upload', 'Doc Vault', '🗄')}
           {link('/app/news-ingestion', 'News Incubator', '🗄')}
+          {link('/app/impact', 'Impact Records', '◇')}
         </nav>
         <div className="mt-auto mb-10 flex flex-col gap-1">
           <button
@@ -68,11 +69,11 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             title={isCollapsed ? 'Expand navigation' : 'Collapse navigation'}
           >
             <span aria-hidden="true">{isCollapsed ? '»' : '«'}</span>
-            {!isCollapsed && 'Collapse'}
+            {!isCollapsed && <span className="hidden sm:inline">Collapse</span>}
           </button>
         </div>
       </aside>
-      <main className="relative px-8 pb-8 pt-20 overflow-y-auto">
+      <main className={`relative px-3 sm:px-8 pb-8 pt-20 min-w-0 ${path.startsWith('/app/news-review/') ? 'overflow-visible' : 'overflow-y-auto'}`}>
         <ThemeToggle />
         <button
           type="button"

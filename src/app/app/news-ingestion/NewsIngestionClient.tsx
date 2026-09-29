@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 /* ------------------------------------------------------------------ */
@@ -131,6 +132,15 @@ function activeDecisionOf(state: ItemState): Decision | null {
 
 export default function NewsIngestionClient() {
   // Search form (controls what gets ingested by "Fetch")
+  const [draftArticles, setDraftArticles] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch('/api/news/reviews', { signal: controller.signal, cache: 'no-store' })
+      .then(async response => response.ok ? response.json() : [])
+      .then(rows => setDraftArticles(new Set(Array.isArray(rows) ? rows.map((row: {article: string}) => row.article) : [])))
+      .catch(() => { /* Review page provides actionable authorization/setup errors. */ });
+    return () => controller.abort();
+  }, []);
   const [ticker, setTicker] = useState('');
   const [days, setDays] = useState(30);
 
@@ -641,13 +651,7 @@ export default function NewsIngestionClient() {
               {/* Accept / Reject buttons */}
               {isIdle && (
                 <div className="mt-3 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => startReview(item, 'accept')}
-                    className="rounded bg-[#238636] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#2ea043]"
-                  >
-                    Accept
-                  </button>
+                  <Link href={`/app/news-review/${encodeURIComponent(item.id)}`} className="rounded border border-green-700 px-3 py-1.5 text-xs text-green-300">{draftArticles.has(item.id) ? 'Resume draft' : 'Review / Accept'}</Link>
                   <button
                     type="button"
                     onClick={() => startReview(item, 'reject')}
@@ -717,7 +721,7 @@ export default function NewsIngestionClient() {
 
                   <p className="mt-2 text-[11px] text-[#8b949e]">
                     {decision === 'accept'
-                      ? 'Accepting moves this article to impact records and removes it from this list.'
+                      ? 'Acceptance now requires the structured review page.'
                       : 'Rejecting hides this article from future previews and removes it from this list.'}
                   </p>
                 </div>

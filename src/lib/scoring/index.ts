@@ -103,3 +103,17 @@ export function scoreEvent(e: RawEvent): ScoredEvent {
     rationale: reasons.join('; ') + '.',
   };
 }
+
+// v1 scoreEvent above remains unchanged for legacy callers and historical results.
+export const REVIEW_SCORING_VERSION = 'review-v2.0.0';
+export const REVIEW_CATEGORIES = ['earnings','guidance','ma','regulatory','litigation','product','leadership','capital_raising','macro'] as const;
+export function scoreReviewAssessment(input: {category:unknown; direction:unknown; magnitude:unknown; sourceCredibility:unknown; mappingConfidence:unknown; impactConfidence:unknown}) {
+ const validConfidence=(v:unknown)=>v===null||(typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1);
+ const confidence={sourceCredibility:input.sourceCredibility,mappingConfidence:input.mappingConfidence,impactConfidence:input.impactConfidence,label:'Uncalibrated heuristic indicators; not probabilities'};
+ const base={version:REVIEW_SCORING_VERSION,direction:input.direction,confidence};
+ if(!validConfidence(input.sourceCredibility)||!validConfidence(input.mappingConfidence)||!validConfidence(input.impactConfidence)||!['positive','negative','mixed','neutral','unknown'].includes(String(input.direction))||!['low','medium','high','unknown'].includes(String(input.magnitude)))return {...base,status:'unscored',magnitude:null,significance:null,rationale:'Invalid scoring input'};
+ if(!REVIEW_CATEGORIES.includes(input.category as typeof REVIEW_CATEGORIES[number]))return {...base,status:'unscored',magnitude:null,significance:null,rationale:'Category has no defined scoring rule'};
+ if(input.direction==='unknown'||input.magnitude==='unknown')return {...base,status:'unscored',magnitude:null,significance:null,rationale:'Direction or magnitude is explicitly unknown'};
+ const magnitude={low:20,medium:55,high:85}[input.magnitude as 'low'|'medium'|'high'];
+ return {...base,status:'scored',magnitude,significance:significanceFrom(magnitude),rationale:`${input.magnitude} magnitude maps to ${magnitude}/100; direction is stored separately. Confidence is not a probability.`};
+}
